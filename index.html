@@ -10,51 +10,90 @@
         sans-serif;
     }
 
+    :root {
+      --neon-orange: #ff7a00;
+      --bg-dark: #050816;
+      --bg-card: rgba(15, 23, 42, 0.9);
+      --border-soft: rgba(148, 163, 184, 0.4);
+    }
+
     body {
       margin: 0;
       padding: 0;
-      background: radial-gradient(circle at top left, #e0f2fe, #f9fafb 40%, #eef2ff);
-      color: #0f172a;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, #1f2933 0, #050816 40%, #020617 80%);
+      color: #f9fafb;
     }
 
     .app-container {
       max-width: 1100px;
-      margin: 32px auto;
-      padding: 24px 20px 32px;
-      background: #ffffff;
-      border-radius: 18px;
+      margin: 24px auto 40px;
+      padding: 20px 18px 30px;
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), rgba(3, 7, 18, 0.98));
+      border-radius: 24px;
       box-shadow:
-        0 18px 40px rgba(15, 23, 42, 0.12),
-        0 0 0 1px rgba(148, 163, 184, 0.18);
+        0 0 0 1px rgba(148, 163, 184, 0.35),
+        0 24px 80px rgba(0, 0, 0, 0.9),
+        0 0 60px rgba(255, 122, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-container::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at top left, rgba(255, 122, 0, 0.18), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.16), transparent 55%);
+      opacity: 0.9;
+      pointer-events: none;
+      z-index: -1;
     }
 
     h1 {
       text-align: center;
       margin-bottom: 4px;
-      font-size: 26px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      color: #0f172a;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: #fefce8;
+      text-transform: uppercase;
+      position: relative;
+    }
+
+    h1::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -8px;
+      width: 140px;
+      height: 2px;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, transparent, var(--neon-orange), transparent);
+      box-shadow: 0 0 18px rgba(255, 122, 0, 0.9);
     }
 
     .subtitle {
       text-align: center;
-      font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 20px;
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 22px;
     }
 
     h2 {
       margin-top: 20px;
       margin-bottom: 10px;
-      font-size: 18px;
-      color: #111827;
+      font-size: 17px;
+      color: #e5e7eb;
+      letter-spacing: 0.02em;
     }
 
     .section-label {
-      font-size: 11px;
+      font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.18em;
       color: #9ca3af;
       margin-bottom: 4px;
     }
@@ -62,15 +101,55 @@
     .top-layout {
       display: grid;
       grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr);
-      gap: 24px;
+      gap: 20px;
       align-items: flex-start;
     }
 
-    .card {
-      border-radius: 16px;
-      border: 1px solid #e5e7eb;
-      background: #f9fafb;
+    .card,
+    .match-section,
+    .team-card {
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(3, 7, 18, 0.98));
       padding: 12px 14px 14px;
+      box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.9),
+        0 0 30px rgba(255, 122, 0, 0.28);
+      backdrop-filter: blur(16px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before,
+    .match-section::before,
+    .team-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at top left, rgba(255, 122, 0, 0.12), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.08), transparent 55%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .card:hover,
+    .match-section:hover,
+    .team-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      border-color: rgba(255, 122, 0, 0.8);
+      box-shadow:
+        0 22px 60px rgba(0, 0, 0, 0.95),
+        0 0 45px rgba(255, 122, 0, 0.8);
+    }
+
+    .card:hover::before,
+    .match-section:hover::before,
+    .team-card:hover::before {
+      opacity: 1;
     }
 
     .player-form {
@@ -82,15 +161,23 @@
     .player-form input {
       flex: 1;
       padding: 8px 10px;
-      border-radius: 10px;
-      border: 1px solid #cbd5f5;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
       font-size: 13px;
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .player-form input::placeholder {
+      color: #6b7280;
     }
 
     .player-form input:focus {
-      outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 1px #2563eb33;
+      border-color: var(--neon-orange);
+      box-shadow: 0 0 0 1px rgba(255, 122, 0, 0.6);
+      background: rgba(15, 23, 42, 0.95);
     }
 
     .btn {
@@ -98,43 +185,109 @@
       border-radius: 999px;
       cursor: pointer;
       font-size: 12px;
-      padding: 7px 14px;
+      padding: 7px 16px;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      background: linear-gradient(135deg, #fb923c, var(--neon-orange));
       color: #f9fafb;
       font-weight: 600;
+      box-shadow:
+        0 0 0 1px rgba(248, 250, 252, 0.1),
+        0 0 18px rgba(255, 122, 0, 0.8);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+
+    .btn-primary::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.35) 50%,
+        transparent 100%
+      );
+      transform: translateX(-120%);
+      transition: transform 0.45s ease-out;
+      pointer-events: none;
+    }
+
+    .btn-primary:hover::after {
+      transform: translateX(120%);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow:
+        0 0 24px rgba(255, 122, 0, 1),
+        0 0 4px rgba(248, 250, 252, 0.4);
     }
 
     .btn-danger {
-      background: #fee2e2;
-      color: #b91c1c;
-      border: 1px solid #fecaca;
+      background: rgba(127, 29, 29, 0.85);
+      color: #fecaca;
+      border: 1px solid rgba(248, 113, 113, 0.6);
+      box-shadow: 0 0 16px rgba(127, 29, 29, 0.6);
+    }
+
+    .btn-danger:hover {
+      background: rgba(185, 28, 28, 0.95);
+    }
+
+    .table-shell {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(3, 7, 18, 0.98));
+      box-shadow:
+        inset 0 0 0 1px rgba(15, 23, 42, 1),
+        0 0 22px rgba(15, 23, 42, 0.9);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 6px;
-      background: #fff;
-      border-radius: 12px;
-      overflow: hidden;
+      background: transparent;
+      font-variant-numeric: tabular-nums;
     }
 
-    th, td {
+    th,
+    td {
       font-size: 12px;
       padding: 7px 8px;
       text-align: center;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+      color: #e5e7eb;
+      white-space: nowrap;
     }
 
     thead {
-      background: #e5e7eb4d;
+      background: linear-gradient(to right, rgba(31, 41, 55, 0.9), rgba(17, 24, 39, 0.95));
+    }
+
+    thead th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9ca3af;
     }
 
     tbody tr:nth-child(even) {
-      background: #f3f4f6;
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    tbody tr:nth-child(odd) {
+      background: rgba(3, 7, 18, 0.9);
+    }
+
+    tbody tr:hover {
+      background: rgba(30, 64, 175, 0.45);
     }
 
     .actions button {
@@ -144,31 +297,37 @@
       border-radius: 999px;
       border: none;
       cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+
+    .actions button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
     }
 
     .actions .win {
-      background: #22c55e1a;
-      color: #15803d;
-      border: 1px solid #22c55e66;
+      background: rgba(22, 163, 74, 0.18);
+      color: #bbf7d0;
+      border: 1px solid rgba(34, 197, 94, 0.5);
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
     }
 
     .actions .loss {
-      background: #fb923c1a;
-      color: #c2410c;
-      border: 1px solid #fb923c66;
+      background: rgba(234, 88, 12, 0.18);
+      color: #fed7aa;
+      border: 1px solid rgba(249, 115, 22, 0.6);
+      box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
     }
 
     .actions .remove {
-      background: #fecaca;
-      color: #b91c1c;
-      border: 1px solid #fca5a5;
+      background: rgba(127, 29, 29, 0.9);
+      color: #fee2e2;
+      border: 1px solid rgba(248, 113, 113, 0.6);
+      box-shadow: 0 0 10px rgba(185, 28, 28, 0.7);
     }
 
     .match-section {
-      margin-top: 20px;
-      border-radius: 16px;
-      background: radial-gradient(circle at top left, #dbeafe, #eff6ff);
-      border: 1px solid #bfdbfe;
+      margin-top: 22px;
       padding: 14px 14px 16px;
     }
 
@@ -181,44 +340,52 @@
 
     .team-card {
       flex: 1;
-      min-width: 230px;
-      background: #ffffffcc;
-      border-radius: 12px;
-      border: 1px solid #dbeafe;
+      min-width: 240px;
       padding: 10px 12px;
     }
 
     .team-card h3 {
       margin: 0 0 6px;
       font-size: 14px;
-      color: #111827;
+      color: #fbbf24;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
 
     select {
       width: 100%;
       padding: 7px 9px;
-      border-radius: 10px;
-      border: 1px solid #cbd5f5;
-      background: #ffffff;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.95);
       font-size: 12px;
+      color: #e5e7eb;
+      outline: none;
+      margin-bottom: 6px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    select option {
+      background: #020617;
+      color: #e5e7eb;
     }
 
     select:focus {
-      outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 1px #2563eb33;
+      border-color: var(--neon-orange);
+      box-shadow: 0 0 0 1px rgba(255, 122, 0, 0.6);
+      background: rgba(15, 23, 42, 1);
     }
 
     label {
       font-size: 11px;
-      color: #4b5563;
+      color: #9ca3af;
       display: block;
       margin-bottom: 2px;
     }
 
     .muted {
       font-size: 11px;
-      color: #6b7280;
+      color: #9ca3af;
     }
 
     .history-header {
@@ -233,13 +400,150 @@
       min-height: 100vh;
     }
 
+    /* 4D Bottom Notification styles */
+    .notification-root {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .notification-4d {
+      pointer-events: auto;
+      min-width: 260px;
+      max-width: 92vw;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(10, 10, 15, 0.96);
+      border: 1px solid rgba(255, 122, 0, 0.85);
+      box-shadow:
+        0 0 26px rgba(255, 122, 0, 0.9),
+        0 0 4px rgba(255, 255, 255, 0.3);
+      color: #fefce8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      animation: notifPop 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      font-size: 12px;
+    }
+
+    .notification-4d-message {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .notification-4d-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: rgba(255, 122, 0, 0.15);
+      border: 1px solid rgba(255, 122, 0, 0.8);
+      box-shadow: 0 0 12px rgba(255, 122, 0, 0.7);
+    }
+
+    .notification-4d-close {
+      cursor: pointer;
+      font-size: 14px;
+      border: none;
+      background: transparent;
+      color: #e5e7eb;
+      padding: 0 4px;
+      line-height: 1;
+      opacity: 0.8;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+
+    .notification-4d-close:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .notif-success {
+      border-color: rgba(34, 197, 94, 0.9);
+      box-shadow: 0 0 26px rgba(34, 197, 94, 0.8);
+    }
+
+    .notif-success .notification-4d-icon {
+      background: rgba(22, 163, 74, 0.2);
+      border-color: rgba(34, 197, 94, 0.9);
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
+    }
+
+    .notif-error {
+      border-color: rgba(248, 113, 113, 0.9);
+      box-shadow: 0 0 26px rgba(248, 113, 113, 0.9);
+    }
+
+    .notif-error .notification-4d-icon {
+      background: rgba(185, 28, 28, 0.25);
+      border-color: rgba(248, 113, 113, 0.9);
+      box-shadow: 0 0 12px rgba(248, 113, 113, 0.9);
+    }
+
+    .notif-info {
+      border-color: rgba(59, 130, 246, 0.85);
+      box-shadow: 0 0 26px rgba(59, 130, 246, 0.9);
+    }
+
+    .notif-info .notification-4d-icon {
+      background: rgba(37, 99, 235, 0.25);
+      border-color: rgba(59, 130, 246, 0.85);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.9);
+    }
+
+    @keyframes notifPop {
+      0% {
+        transform: translateX(-50%) translateY(40px) scale(0.7);
+        opacity: 0;
+      }
+      60% {
+        transform: translateX(-50%) translateY(-4px) scale(1.05);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
     @media (max-width: 900px) {
       .top-layout {
         grid-template-columns: minmax(0, 1fr);
       }
+
+      .app-container {
+        margin: 18px 10px 28px;
+        padding: 16px 12px 22px;
+      }
     }
 
     @media (max-width: 600px) {
+      .app-container {
+        margin: 12px 6px 24px;
+        padding: 14px 10px 20px;
+        border-radius: 18px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .subtitle {
+        font-size: 11px;
+        padding: 0 4px;
+      }
+
       .player-form {
         flex-direction: column;
       }
@@ -247,6 +551,21 @@
       th:nth-child(1),
       td:nth-child(1) {
         display: none;
+      }
+
+      th,
+      td {
+        font-size: 11px;
+        padding: 6px 6px;
+      }
+
+      .notification-root {
+        bottom: 10px;
+      }
+
+      .notification-4d {
+        padding: 8px 10px;
+        font-size: 11px;
       }
     }
   </style>
@@ -295,15 +614,6 @@
       return docs;
     }
 
-    // ---------- Helpers ----------
-    function askAdmin(action) {
-      const entered = prompt("Admin PIN required to " + action + ". Enter PIN:");
-      if (entered === null) return false;
-      if (entered === ADMIN_PIN) return true;
-      alert("Wrong PIN");
-      return false;
-    }
-
     function formatTime(ts) {
       try {
         let d;
@@ -346,6 +656,30 @@
       const [team1, setTeam1] = useState({ p1: "", p2: "" });
       const [team2, setTeam2] = useState({ p1: "", p2: "" });
       const [winnerTeam, setWinnerTeam] = useState("");
+
+      const [notifications, setNotifications] = useState([]);
+
+      function showNotification(message, type = "info", duration = 3000) {
+        const id = Date.now().toString() + Math.random().toString(16).slice(2);
+        setNotifications((prev) => [...prev, { id, message, type }]);
+        if (duration > 0) {
+          setTimeout(() => {
+            setNotifications((prev) => prev.filter((n) => n.id !== id));
+          }, duration);
+        }
+      }
+
+      function dismissNotification(id) {
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+      }
+
+      function askAdmin(action) {
+        const entered = prompt("Admin PIN required to " + action + ". Enter PIN:");
+        if (entered === null) return false;
+        if (entered === ADMIN_PIN) return true;
+        showNotification("Wrong PIN", "error");
+        return false;
+      }
 
       const playerMap = useMemo(() => {
         const map = new Map();
@@ -395,91 +729,140 @@
       async function requestNewPlayer(e) {
         e.preventDefault();
         const name = newName.trim();
-        if (!name) return;
-        await db.collection("pendingRequests").add({
-          type: "player",
-          name,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-        setNewName("");
-        alert("Player request submitted. Admin will approve it.");
+        if (!name) {
+          showNotification("Enter a player name.", "error");
+          return;
+        }
+        try {
+          await db.collection("pendingRequests").add({
+            type: "player",
+            name,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          setNewName("");
+          showNotification("Player request submitted. Waiting for admin approval.", "success");
+        } catch (err) {
+          console.error(err);
+          showNotification("Failed to submit player request.", "error");
+        }
       }
 
       async function requestMatch(e) {
         e.preventDefault();
         if (players.length < 4) {
-          alert("Add at least 4 players first.");
+          showNotification("Add at least 4 players first.", "error");
           return;
         }
         const ids = [team1.p1, team1.p2, team2.p1, team2.p2];
         if (ids.some((id) => !id)) {
-          alert("Select all 4 players.");
+          showNotification("Select all 4 players.", "error");
           return;
         }
         if (new Set(ids).size !== 4) {
-          alert("Each position must have a different player.");
+          showNotification("Each position must have a different player.", "error");
           return;
         }
         if (!winnerTeam) {
-          alert("Select winning team.");
+          showNotification("Select winning team.", "error");
           return;
         }
 
         const team1Ids = [team1.p1, team1.p2];
         const team2Ids = [team2.p1, team2.p2];
 
-        await db.collection("pendingRequests").add({
-          type: "match",
-          team1Ids,
-          team2Ids,
-          winningTeam: Number(winnerTeam),
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
+        try {
+          await db.collection("pendingRequests").add({
+            type: "match",
+            team1Ids,
+            team2Ids,
+            winningTeam: Number(winnerTeam),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
 
-        setTeam1({ p1: "", p2: "" });
-        setTeam2({ p1: "", p2: "" });
-        setWinnerTeam("");
-        alert("Match request submitted. Admin will approve it.");
+          setTeam1({ p1: "", p2: "" });
+          setTeam2({ p1: "", p2: "" });
+          setWinnerTeam("");
+          showNotification("Match request submitted. Waiting for admin approval.", "success");
+        } catch (err) {
+          console.error(err);
+          showNotification("Failed to submit match request.", "error");
+        }
       }
 
       // ---------- ADMIN ACTIONS ----------
       async function addPoint(id) {
         if (!askAdmin("add a point")) return;
-        await db.collection("players").doc(id).update({
-          points: firebase.firestore.FieldValue.increment(1),
-        });
+        try {
+          await db.collection("players").doc(id).update({
+            points: firebase.firestore.FieldValue.increment(1),
+          });
+          showNotification("Point added.", "success");
+        } catch (err) {
+          console.error(err);
+          showNotification("Failed to update points.", "error");
+        }
       }
 
       async function addLoss(id) {
         if (!askAdmin("add a loss")) return;
-        await db.collection("players").doc(id).update({
-          losses: firebase.firestore.FieldValue.increment(1),
-        });
+        try {
+          await db.collection("players").doc(id).update({
+            losses: firebase.firestore.FieldValue.increment(1),
+          });
+          showNotification("Loss added.", "info");
+        } catch (err) {
+          console.error(err);
+          showNotification("Failed to update losses.", "error");
+        }
       }
 
       async function removePlayer(id) {
         if (!askAdmin("remove this player")) return;
-        await db.collection("players").doc(id).delete();
+        const ok = confirm("Remove this player?");
+        if (!ok) return;
+        try {
+          await db.collection("players").doc(id).delete();
+          showNotification("Player removed.", "success");
+        } catch (err) {
+          console.error(err);
+          showNotification("Failed to remove player.", "error");
+        }
       }
 
       async function resetAll() {
         if (!players.length) return;
         if (!askAdmin("reset all points & losses")) return;
-        const batch = db.batch();
-        players.forEach((p) => {
-          batch.update(db.collection("players").doc(p.id), { points: 0, losses: 0 });
-        });
-        await batch.commit();
+        const ok = confirm("Reset all points and losses?");
+        if (!ok) return;
+        try {
+          const batch = db.batch();
+          players.forEach((p) => {
+            batch.update(db.collection("players").doc(p.id), { points: 0, losses: 0 });
+          });
+          await batch.commit();
+          showNotification("All points and losses reset.", "info");
+        } catch (err) {
+          console.error(err);
+          showNotification("Failed to reset scores.", "error");
+        }
       }
 
       async function clearHistory() {
         if (!matches.length) return;
         if (!askAdmin("clear ALL match history")) return;
-        const batch = db.batch();
-        matches.forEach((m) => {
-          batch.delete(db.collection("matches").doc(m.id));
-        });
-        await batch.commit();
+        const ok = confirm("Clear ALL match history?");
+        if (!ok) return;
+        try {
+          const batch = db.batch();
+          matches.forEach((m) => {
+            batch.delete(db.collection("matches").doc(m.id));
+          });
+          await batch.commit();
+          showNotification("Match history cleared.", "info");
+        } catch (err) {
+          console.error(err);
+          showNotification("Failed to clear history.", "error");
+        }
       }
 
       async function approveRequest(id) {
@@ -489,49 +872,55 @@
 
         const reqDocRef = db.collection("pendingRequests").doc(id);
 
-        if (req.type === "player") {
-          const name = (req.name || "").trim();
-          if (name) {
-            await db.collection("players").add({
-              name,
-              points: 0,
-              losses: 0,
-              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        try {
+          if (req.type === "player") {
+            const name = (req.name || "").trim();
+            if (name) {
+              await db.collection("players").add({
+                name,
+                points: 0,
+                losses: 0,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+          } else if (req.type === "match") {
+            const { team1Ids = [], team2Ids = [], winningTeam } = req;
+            let winningIds, losingIds;
+            if (winningTeam === 1) {
+              winningIds = team1Ids;
+              losingIds = team2Ids;
+            } else {
+              winningIds = team2Ids;
+              losingIds = team1Ids;
+            }
+
+            const batch = db.batch();
+            winningIds.forEach((pid) => {
+              batch.update(db.collection("players").doc(pid), {
+                points: firebase.firestore.FieldValue.increment(1),
+              });
+            });
+            losingIds.forEach((pid) => {
+              batch.update(db.collection("players").doc(pid), {
+                losses: firebase.firestore.FieldValue.increment(1),
+              });
+            });
+            await batch.commit();
+
+            await db.collection("matches").add({
+              team1Ids,
+              team2Ids,
+              winningTeam,
+              time: firebase.firestore.FieldValue.serverTimestamp(),
             });
           }
-        } else if (req.type === "match") {
-          const { team1Ids = [], team2Ids = [], winningTeam } = req;
-          let winningIds, losingIds;
-          if (winningTeam === 1) {
-            winningIds = team1Ids;
-            losingIds = team2Ids;
-          } else {
-            winningIds = team2Ids;
-            losingIds = team1Ids;
-          }
 
-          const batch = db.batch();
-          winningIds.forEach((pid) => {
-            batch.update(db.collection("players").doc(pid), {
-              points: firebase.firestore.FieldValue.increment(1),
-            });
-          });
-          losingIds.forEach((pid) => {
-            batch.update(db.collection("players").doc(pid), {
-              losses: firebase.firestore.FieldValue.increment(1),
-            });
-          });
-          await batch.commit();
-
-          await db.collection("matches").add({
-            team1Ids,
-            team2Ids,
-            winningTeam,
-            time: firebase.firestore.FieldValue.serverTimestamp(),
-          });
+          await reqDocRef.delete();
+          showNotification("Request approved.", "success");
+        } catch (err) {
+          console.error(err);
+          showNotification("Failed to approve request.", "error");
         }
-
-        await reqDocRef.delete();
       }
 
       async function rejectRequest(id) {
@@ -539,7 +928,13 @@
         if (!req) return;
         const ok = confirm("Reject this " + req.type + " request?");
         if (!ok) return;
-        await db.collection("pendingRequests").doc(id).delete();
+        try {
+          await db.collection("pendingRequests").doc(id).delete();
+          showNotification("Request rejected.", "info");
+        } catch (err) {
+          console.error(err);
+          showNotification("Failed to reject request.", "error");
+        }
       }
 
       function playerOptions(exclude = []) {
@@ -548,511 +943,577 @@
 
       // ---------- UI ----------
       return h(
-        "div",
-        { className: "app-container" },
+        React.Fragment,
+        null,
         [
-          h("h1", null, "🏸 Badminton Group Tracker (React + Admin)"),
           h(
             "div",
-            { className: "subtitle" },
-            "Friends send requests; admin (PIN 2727) approves. Firebase keeps everything in sync."
-          ),
-
-          // Top layout
-          h(
-            "div",
-            { className: "top-layout" },
+            { className: "app-container" },
             [
-              // LEFT: players & form
+              h("h1", null, "🏸 Badminton Group Tracker"),
               h(
                 "div",
-                null,
+                { className: "subtitle" },
+                "4D Neon Sports Dashboard · Friends send requests · Admin (PIN 2727) approves · Firebase sync across devices."
+              ),
+
+              // Top layout
+              h(
+                "div",
+                { className: "top-layout" },
                 [
-                  h("div", { className: "section-label" }, "Players"),
-                  h("h2", null, "Scoreboard"),
-                  h(
-                    "form",
-                    { onSubmit: requestNewPlayer, className: "player-form" },
-                    [
-                      h("input", {
-                        type: "text",
-                        placeholder: "Request new player name (e.g. Hanu)",
-                        value: newName,
-                        onChange: (e) => setNewName(e.target.value),
-                      }),
-                      h(
-                        "button",
-                          { type: "submit", className: "btn btn-primary" },
-                          "Request Player"
-                      ),
-                    ]
-                  ),
+                  // LEFT: players & form
                   h(
                     "div",
-                    { className: "muted", style: { marginBottom: "6px" } },
-                    "Admin will approve from Pending Requests."
-                  ),
-                  h(
-                    "table",
                     null,
                     [
+                      h("div", { className: "section-label" }, "Players"),
+                      h("h2", null, "Scoreboard"),
                       h(
-                        "thead",
-                        null,
+                        "form",
+                        { onSubmit: requestNewPlayer, className: "player-form" },
+                        [
+                          h("input", {
+                            type: "text",
+                            placeholder: "Request new player name (e.g. Hanu)",
+                            value: newName,
+                            onChange: (e) => setNewName(e.target.value),
+                          }),
+                          h(
+                            "button",
+                            { type: "submit", className: "btn btn-primary" },
+                            "Request Player"
+                          ),
+                        ]
+                      ),
+                      h(
+                        "div",
+                        { className: "muted", style: { marginBottom: "6px" } },
+                        "Friends request players; admin approves from Pending Requests."
+                      ),
+                      h(
+                        "div",
+                        { className: "table-shell" },
                         h(
-                          "tr",
+                          "table",
                           null,
                           [
-                            h("th", null, "#"),
-                            h("th", null, "Player"),
-                            h("th", null, "Points"),
-                            h("th", null, "Losses"),
-                            h("th", null, "Points %"),
-                            h("th", null, "Actions (Admin)"),
+                            h(
+                              "thead",
+                              null,
+                              h(
+                                "tr",
+                                null,
+                                [
+                                  h("th", null, "#"),
+                                  h("th", null, "Player"),
+                                  h("th", null, "Points"),
+                                  h("th", null, "Losses"),
+                                  h("th", null, "Win %"),
+                                  h("th", null, "Actions"),
+                                ]
+                              )
+                            ),
+                            h(
+                              "tbody",
+                              null,
+                              sortedPlayers.length === 0
+                                ? h(
+                                    "tr",
+                                    null,
+                                    h(
+                                      "td",
+                                      { colSpan: 6, className: "muted" },
+                                      "No players yet. Ask admin to approve some."
+                                    )
+                                  )
+                                : sortedPlayers.map((p, idx) =>
+                                    h(
+                                      "tr",
+                                      { key: p.id },
+                                      [
+                                        h("td", null, idx + 1),
+                                        h("td", null, p.name),
+                                        h("td", null, p.points || 0),
+                                        h("td", null, p.losses || 0),
+                                        h("td", null, getPointsPct(p)),
+                                        h(
+                                          "td",
+                                          { className: "actions" },
+                                          [
+                                            h(
+                                              "button",
+                                              {
+                                                className: "win",
+                                                onClick: () => addPoint(p.id),
+                                              },
+                                              "+Point"
+                                            ),
+                                            h(
+                                              "button",
+                                              {
+                                                className: "loss",
+                                                onClick: () => addLoss(p.id),
+                                              },
+                                              "+Loss"
+                                            ),
+                                            h(
+                                              "button",
+                                              {
+                                                className: "remove",
+                                                onClick: () => removePlayer(p.id),
+                                              },
+                                              "✕"
+                                            ),
+                                          ]
+                                        ),
+                                      ]
+                                    )
+                                  )
+                            ),
                           ]
                         )
                       ),
                       h(
-                        "tbody",
-                        null,
-                        sortedPlayers.length === 0
-                          ? h(
-                              "tr",
-                              null,
-                              h(
-                                "td",
-                                { colSpan: 6, className: "muted" },
-                                "No players yet. Ask admin to approve some."
-                              )
-                            )
-                          : sortedPlayers.map((p, idx) =>
-                              h(
-                                "tr",
-                                { key: p.id },
-                                [
-                                  h("td", null, idx + 1),
-                                  h("td", null, p.name),
-                                  h("td", null, p.points || 0),
-                                  h("td", null, p.losses || 0),
-                                  h("td", null, getPointsPct(p)),
-                                  h(
-                                    "td",
-                                    { className: "actions" },
-                                    [
-                                      h(
-                                        "button",
-                                        {
-                                          className: "win",
-                                          onClick: () => addPoint(p.id),
-                                        },
-                                        "+Point"
-                                      ),
-                                      h(
-                                        "button",
-                                        {
-                                          className: "loss",
-                                          onClick: () => addLoss(p.id),
-                                        },
-                                        "+Loss"
-                                      ),
-                                      h(
-                                        "button",
-                                        {
-                                          className: "remove",
-                                          onClick: () => removePlayer(p.id),
-                                        },
-                                        "✕"
-                                      ),
-                                    ]
-                                  ),
-                                ]
-                              )
-                            )
+                        "div",
+                        { style: { marginTop: "8px", textAlign: "right" } },
+                        h(
+                          "button",
+                          { className: "btn btn-danger", onClick: resetAll },
+                          "Reset All Points (Admin)"
+                        )
                       ),
                     ]
                   ),
+
+                  // RIGHT: summary
                   h(
                     "div",
-                    { style: { marginTop: "8px", textAlign: "right" } },
-                    h(
-                      "button",
-                      { className: "btn btn-danger", onClick: resetAll },
-                      "Reset All Points (Admin)"
-                    )
+                    { className: "card" },
+                    [
+                      h("div", { className: "section-label" }, "Admin Overview"),
+                      h("h2", null, "Arena Snapshot"),
+                      h(
+                        "p",
+                        { className: "muted" },
+                        `Players: ${players.length} · Matches: ${matches.length}`
+                      ),
+                      h(
+                        "p",
+                        { className: "muted", style: { marginTop: "4px" } },
+                        `Pending requests: ${pendingRequests.length}`
+                      ),
+                      h(
+                        "p",
+                        { className: "muted", style: { marginTop: "10px" } },
+                        "Tip: Share this URL with your friends. They can request players & matches directly from their phones."
+                      ),
+                    ]
                   ),
                 ]
               ),
 
-              // RIGHT: summary
+              // Match form
               h(
                 "div",
-                { className: "card" },
+                { className: "match-section" },
                 [
-                  h("div", { className: "section-label" }, "Admin Overview"),
-                  h("h2", null, "Summary"),
+                  h("div", { className: "section-label" }, "Friends – Group Match"),
+                  h("h2", null, "Request Match Result (2 vs 2)"),
                   h(
                     "p",
                     { className: "muted" },
-                    `Players: ${players.length} · Matches: ${matches.length}`
+                    "Pick 2 players per team and choose the winner. This becomes a pending request; admin approves it and scores update for everyone."
                   ),
                   h(
-                    "p",
-                    { className: "muted", style: { marginTop: "4px" } },
-                    `Pending requests: ${pendingRequests.length}`
-                  ),
-                ]
-              ),
-            ]
-          ),
-
-          // Match form
-          h(
-            "div",
-            { className: "match-section" },
-            [
-              h("div", { className: "section-label" }, "Friends – Group Match"),
-              h("h2", null, "Request Match Result (2 vs 2)"),
-              h(
-                "p",
-                { className: "muted" },
-                "Pick 2 players per team and choose the winner. This becomes a pending request; admin approves it."
-              ),
-              h(
-                "form",
-                { onSubmit: requestMatch },
-                [
-                  h(
-                    "div",
-                    { className: "teams-row" },
+                    "form",
+                    { onSubmit: requestMatch },
                     [
                       h(
                         "div",
-                        { className: "team-card" },
+                        { className: "teams-row" },
                         [
-                          h("h3", null, "Team 1"),
-                          h("label", { htmlFor: "t1p1" }, "Player 1"),
                           h(
-                            "select",
-                            {
-                              id: "t1p1",
-                              value: team1.p1,
-                              onChange: (e) =>
-                                setTeam1((t) => ({ ...t, p1: e.target.value })),
-                            },
+                            "div",
+                            { className: "team-card" },
                             [
-                              h("option", { value: "" }, "Select"),
-                              ...playerOptions([team1.p2, team2.p1, team2.p2]).map(
-                                (p) =>
-                                  h(
-                                    "option",
-                                    { key: p.id, value: p.id },
-                                    p.name
-                                  )
-                              ),
-                            ]
-                          ),
-                          h("label", { htmlFor: "t1p2" }, "Player 2"),
-                          h(
-                            "select",
-                            {
-                              id: "t1p2",
-                              value: team1.p2,
-                              onChange: (e) =>
-                                setTeam1((t) => ({ ...t, p2: e.target.value })),
-                            },
-                            [
-                              h("option", { value: "" }, "Select"),
-                              ...playerOptions([team1.p1, team2.p1, team2.p2]).map(
-                                (p) =>
-                                  h(
-                                    "option",
-                                    { key: p.id, value: p.id },
-                                    p.name
-                                  )
-                              ),
-                            ]
-                          ),
-                        ]
-                      ),
-                      h(
-                        "div",
-                        { className: "team-card" },
-                        [
-                          h("h3", null, "Team 2"),
-                          h("label", { htmlFor: "t2p1" }, "Player 1"),
-                          h(
-                            "select",
-                            {
-                              id: "t2p1",
-                              value: team2.p1,
-                              onChange: (e) =>
-                                setTeam2((t) => ({ ...t, p1: e.target.value })),
-                            },
-                            [
-                              h("option", { value: "" }, "Select"),
-                              ...playerOptions([team2.p2, team1.p1, team1.p2]).map(
-                                (p) =>
-                                  h(
-                                    "option",
-                                    { key: p.id, value: p.id },
-                                    p.name
-                                  )
-                              ),
-                            ]
-                          ),
-                          h("label", { htmlFor: "t2p2" }, "Player 2"),
-                          h(
-                            "select",
-                            {
-                              id: "t2p2",
-                              value: team2.p2,
-                              onChange: (e) =>
-                                setTeam2((t) => ({ ...t, p2: e.target.value })),
-                            },
-                            [
-                              h("option", { value: "" }, "Select"),
-                              ...playerOptions([team2.p1, team1.p1, team1.p2]).map(
-                                (p) =>
-                                  h(
-                                    "option",
-                                    { key: p.id, value: p.id },
-                                    p.name
-                                  )
-                              ),
-                            ]
-                          ),
-                        ]
-                      ),
-                    ]
-                  ),
-                  h(
-                    "div",
-                    { style: { display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" } },
-                    [
-                      h(
-                        "div",
-                        null,
-                        [
-                          h("label", { htmlFor: "winner-team" }, "Winning team"),
-                          h(
-                            "select",
-                            {
-                              id: "winner-team",
-                              value: winnerTeam,
-                              onChange: (e) => setWinnerTeam(e.target.value),
-                            },
-                            [
-                              h("option", { value: "" }, "Select winner"),
-                              h("option", { value: "1" }, "Team 1"),
-                              h("option", { value: "2" }, "Team 2"),
-                            ]
-                          ),
-                        ]
-                      ),
-                      h(
-                        "button",
-                        { type: "submit", className: "btn btn-primary" },
-                        "Request Match"
-                      ),
-                    ]
-                  ),
-                ]
-              ),
-            ]
-          ),
-
-          // Pending
-          h(
-            "div",
-            { style: { marginTop: "22px" } },
-            [
-              h("div", { className: "section-label" }, "Admin – Pending"),
-              h("h2", null, "Pending Requests"),
-              h(
-                "table",
-                null,
-                [
-                  h(
-                    "thead",
-                    null,
-                    h(
-                      "tr",
-                      null,
-                      [
-                        h("th", null, "#"),
-                        h("th", null, "Type"),
-                        h("th", null, "Details"),
-                        h("th", null, "Submitted"),
-                        h("th", null, "Actions (PIN)"),
-                      ]
-                    )
-                  ),
-                  h(
-                    "tbody",
-                    null,
-                    pendingRequests.length === 0
-                      ? h(
-                          "tr",
-                          null,
-                          h(
-                            "td",
-                            { colSpan: 5, className: "muted" },
-                            "No pending requests."
-                          )
-                        )
-                      : pendingRequests.map((req, idx) => {
-                          let typeLabel = "";
-                          let details = "";
-                          if (req.type === "player") {
-                            typeLabel = "New Player";
-                            details = `Name: ${req.name}`;
-                          } else if (req.type === "match") {
-                            const t1 = (req.team1Ids || [])
-                              .map((id) => getPlayerName(id))
-                              .join(" & ");
-                            const t2 = (req.team2Ids || [])
-                              .map((id) => getPlayerName(id))
-                              .join(" & ");
-                            const winner =
-                              req.winningTeam === 1 ? "Team 1" : "Team 2";
-                            details = `T1: ${t1} | T2: ${t2} | Winner: ${winner}`;
-                          }
-                          return h(
-                            "tr",
-                            { key: req.id },
-                            [
-                              h("td", null, idx + 1),
-                              h("td", null, typeLabel),
-                              h("td", { style: { textAlign: "left", fontSize: "12px" } }, details),
-                              h("td", null, formatTime(req.createdAt)),
+                              h("h3", null, "Team 1"),
+                              h("label", { htmlFor: "t1p1" }, "Player 1"),
                               h(
-                                "td",
-                                null,
+                                "select",
+                                {
+                                  id: "t1p1",
+                                  value: team1.p1,
+                                  onChange: (e) =>
+                                    setTeam1((t) => ({ ...t, p1: e.target.value })),
+                                },
                                 [
-                                  h(
-                                    "button",
-                                    {
-                                      className: "btn btn-primary",
-                                      style: { padding: "4px 10px", marginRight: "4px" },
-                                      onClick: () => approveRequest(req.id),
-                                    },
-                                    "Approve"
+                                  h("option", { value: "" }, "Select"),
+                                  ...playerOptions([team1.p2, team2.p1, team2.p2]).map(
+                                    (p) =>
+                                      h(
+                                        "option",
+                                        { key: p.id, value: p.id },
+                                        p.name
+                                      )
                                   ),
-                                  h(
-                                    "button",
-                                    {
-                                      className: "btn btn-danger",
-                                      style: { padding: "4px 10px" },
-                                      onClick: () => rejectRequest(req.id),
-                                    },
-                                    "Reject"
+                                ]
+                              ),
+                              h("label", { htmlFor: "t1p2" }, "Player 2"),
+                              h(
+                                "select",
+                                {
+                                  id: "t1p2",
+                                  value: team1.p2,
+                                  onChange: (e) =>
+                                    setTeam1((t) => ({ ...t, p2: e.target.value })),
+                                },
+                                [
+                                  h("option", { value: "" }, "Select"),
+                                  ...playerOptions([team1.p1, team2.p1, team2.p2]).map(
+                                    (p) =>
+                                      h(
+                                        "option",
+                                        { key: p.id, value: p.id },
+                                        p.name
+                                      )
                                   ),
                                 ]
                               ),
                             ]
-                          );
-                        })
+                          ),
+                          h(
+                            "div",
+                            { className: "team-card" },
+                            [
+                              h("h3", null, "Team 2"),
+                              h("label", { htmlFor: "t2p1" }, "Player 1"),
+                              h(
+                                "select",
+                                {
+                                  id: "t2p1",
+                                  value: team2.p1,
+                                  onChange: (e) =>
+                                    setTeam2((t) => ({ ...t, p1: e.target.value })),
+                                },
+                                [
+                                  h("option", { value: "" }, "Select"),
+                                  ...playerOptions([team2.p2, team1.p1, team1.p2]).map(
+                                    (p) =>
+                                      h(
+                                        "option",
+                                        { key: p.id, value: p.id },
+                                        p.name
+                                      )
+                                  ),
+                                ]
+                              ),
+                              h("label", { htmlFor: "t2p2" }, "Player 2"),
+                              h(
+                                "select",
+                                {
+                                  id: "t2p2",
+                                  value: team2.p2,
+                                  onChange: (e) =>
+                                    setTeam2((t) => ({ ...t, p2: e.target.value })),
+                                },
+                                [
+                                  h("option", { value: "" }, "Select"),
+                                  ...playerOptions([team2.p1, team1.p1, team1.p2]).map(
+                                    (p) =>
+                                      h(
+                                        "option",
+                                        { key: p.id, value: p.id },
+                                        p.name
+                                      )
+                                  ),
+                                ]
+                              ),
+                            ]
+                          ),
+                        ]
+                      ),
+                      h(
+                        "div",
+                        { style: { display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" } },
+                        [
+                          h(
+                            "div",
+                            null,
+                            [
+                              h("label", { htmlFor: "winner-team" }, "Winning team"),
+                              h(
+                                "select",
+                                {
+                                  id: "winner-team",
+                                  value: winnerTeam,
+                                  onChange: (e) => setWinnerTeam(e.target.value),
+                                },
+                                [
+                                  h("option", { value: "" }, "Select winner"),
+                                  h("option", { value: "1" }, "Team 1"),
+                                  h("option", { value: "2" }, "Team 2"),
+                                ]
+                              ),
+                            ]
+                          ),
+                          h(
+                            "button",
+                            { type: "submit", className: "btn btn-primary" },
+                            "Request Match"
+                          ),
+                        ]
+                      ),
+                    ]
+                  ),
+                ]
+              ),
+
+              // Pending
+              h(
+                "div",
+                { style: { marginTop: "22px" } },
+                [
+                  h("div", { className: "section-label" }, "Admin – Pending"),
+                  h("h2", null, "Pending Requests"),
+                  h(
+                    "div",
+                    { className: "table-shell" },
+                    h(
+                      "table",
+                      null,
+                      [
+                        h(
+                          "thead",
+                          null,
+                          h(
+                            "tr",
+                            null,
+                            [
+                              h("th", null, "#"),
+                              h("th", null, "Type"),
+                              h("th", null, "Details"),
+                              h("th", null, "Submitted"),
+                              h("th", null, "Actions"),
+                            ]
+                          )
+                        ),
+                        h(
+                          "tbody",
+                          null,
+                          pendingRequests.length === 0
+                            ? h(
+                                "tr",
+                                null,
+                                h(
+                                  "td",
+                                  { colSpan: 5, className: "muted" },
+                                  "No pending requests."
+                                )
+                              )
+                            : pendingRequests.map((req, idx) => {
+                                let typeLabel = "";
+                                let details = "";
+                                if (req.type === "player") {
+                                  typeLabel = "New Player";
+                                  details = `Name: ${req.name}`;
+                                } else if (req.type === "match") {
+                                  const t1 = (req.team1Ids || [])
+                                    .map((id) => getPlayerName(id))
+                                    .join(" & ");
+                                  const t2 = (req.team2Ids || [])
+                                    .map((id) => getPlayerName(id))
+                                    .join(" & ");
+                                  const winner =
+                                    req.winningTeam === 1 ? "Team 1" : "Team 2";
+                                  details = `T1: ${t1} | T2: ${t2} | Winner: ${winner}`;
+                                }
+                                return h(
+                                  "tr",
+                                  { key: req.id },
+                                  [
+                                    h("td", null, idx + 1),
+                                    h("td", null, typeLabel),
+                                    h("td", { style: { textAlign: "left", fontSize: "12px" } }, details),
+                                    h("td", null, formatTime(req.createdAt)),
+                                    h(
+                                      "td",
+                                      null,
+                                      [
+                                        h(
+                                          "button",
+                                          {
+                                            className: "btn btn-primary",
+                                            style: { padding: "4px 10px", marginRight: "4px" },
+                                            onClick: () => approveRequest(req.id),
+                                          },
+                                          "Approve"
+                                        ),
+                                        h(
+                                          "button",
+                                          {
+                                            className: "btn btn-danger",
+                                            style: { padding: "4px 10px" },
+                                            onClick: () => rejectRequest(req.id),
+                                          },
+                                          "Reject"
+                                        ),
+                                      ]
+                                    ),
+                                  ]
+                                );
+                              })
+                        ),
+                      ]
+                    )
+                  ),
+                ]
+              ),
+
+              // History
+              h(
+                "div",
+                { style: { marginTop: "22px" } },
+                [
+                  h("div", { className: "section-label" }, "History"),
+                  h(
+                    "div",
+                    { className: "history-header" },
+                    [
+                      h("h2", null, "Match History"),
+                      h(
+                        "div",
+                        { style: { display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" } },
+                        [
+                          h("span", { className: "muted" }, "Filter:"),
+                          h(
+                            "select",
+                            {
+                              value: historyFilter,
+                              onChange: (e) => setHistoryFilter(e.target.value),
+                              id: "history-filter",
+                            },
+                            [
+                              h("option", { value: "all" }, "All"),
+                              h("option", { value: "today" }, "Today"),
+                              h("option", { value: "week" }, "Last 7 days"),
+                            ]
+                          ),
+                          h(
+                            "button",
+                            { className: "btn btn-danger", onClick: clearHistory },
+                            "Clear History (Admin)"
+                          ),
+                        ]
+                      ),
+                    ]
+                  ),
+                  h(
+                    "div",
+                    { className: "table-shell" },
+                    h(
+                      "table",
+                      null,
+                      [
+                        h(
+                          "thead",
+                          null,
+                          h(
+                            "tr",
+                            null,
+                            [
+                              h("th", null, "#"),
+                              h("th", null, "Team 1"),
+                              h("th", null, "Team 2"),
+                              h("th", null, "Winner"),
+                              h("th", null, "Time"),
+                            ]
+                          )
+                        ),
+                        h(
+                          "tbody",
+                          null,
+                          filteredMatches().length === 0
+                            ? h(
+                                "tr",
+                                null,
+                                h(
+                                  "td",
+                                  { colSpan: 5, className: "muted" },
+                                  "No matches yet."
+                                )
+                              )
+                            : filteredMatches().map((m, idx) => {
+                                const t1Names = (m.team1Ids || [])
+                                  .map((id) => getPlayerName(id))
+                                  .join(" & ");
+                                const t2Names = (m.team2Ids || [])
+                                  .map((id) => getPlayerName(id))
+                                  .join(" & ");
+                                const winnerNames =
+                                  m.winningTeam === 1 ? t1Names : t2Names;
+                                return h(
+                                  "tr",
+                                  { key: m.id },
+                                  [
+                                    h("td", null, idx + 1),
+                                    h("td", null, t1Names),
+                                    h("td", null, t2Names),
+                                    h("td", null, winnerNames),
+                                    h("td", null, formatTime(m.time)),
+                                  ]
+                                );
+                              })
+                        ),
+                      ]
+                    )
                   ),
                 ]
               ),
             ]
           ),
 
-          // History
+          // 4D bottom notifications
           h(
             "div",
-            { style: { marginTop: "22px" } },
-            [
-              h("div", { className: "section-label" }, "History"),
+            { className: "notification-root" },
+            notifications.map((n) =>
               h(
                 "div",
-                { className: "history-header" },
+                {
+                  key: n.id,
+                  className:
+                    "notification-4d " +
+                    (n.type === "success"
+                      ? "notif-success"
+                      : n.type === "error"
+                      ? "notif-error"
+                      : "notif-info"),
+                },
                 [
-                  h("h2", null, "Match History"),
                   h(
                     "div",
-                    { style: { display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" } },
+                    { className: "notification-4d-message" },
                     [
-                      h("span", { className: "muted" }, "Filter:"),
                       h(
-                        "select",
-                        {
-                          value: historyFilter,
-                          onChange: (e) => setHistoryFilter(e.target.value),
-                          id: "history-filter",
-                        },
-                        [
-                          h("option", { value: "all" }, "All"),
-                          h("option", { value: "today" }, "Today"),
-                          h("option", { value: "week" }, "Last 7 days"),
-                        ]
+                        "span",
+                        { className: "notification-4d-icon" },
+                        n.type === "success" ? "✓" : n.type === "error" ? "!" : "i"
                       ),
-                      h(
-                        "button",
-                        { className: "btn btn-danger", onClick: clearHistory },
-                        "Clear History (Admin)"
-                      ),
+                      h("span", null, n.message),
                     ]
                   ),
-                ]
-              ),
-              h(
-                "table",
-                null,
-                [
                   h(
-                    "thead",
-                    null,
-                    h(
-                      "tr",
-                      null,
-                      [
-                        h("th", null, "#"),
-                        h("th", null, "Team 1"),
-                        h("th", null, "Team 2"),
-                        h("th", null, "Winner"),
-                        h("th", null, "Time"),
-                      ]
-                    )
-                  ),
-                  h(
-                    "tbody",
-                    null,
-                    filteredMatches().length === 0
-                      ? h(
-                          "tr",
-                          null,
-                          h(
-                            "td",
-                            { colSpan: 5, className: "muted" },
-                            "No matches yet."
-                          )
-                        )
-                      : filteredMatches().map((m, idx) => {
-                          const t1Names = (m.team1Ids || [])
-                            .map((id) => getPlayerName(id))
-                            .join(" & ");
-                          const t2Names = (m.team2Ids || [])
-                            .map((id) => getPlayerName(id))
-                            .join(" & ");
-                          const winnerNames =
-                            m.winningTeam === 1 ? t1Names : t2Names;
-                          return h(
-                            "tr",
-                            { key: m.id },
-                            [
-                              h("td", null, idx + 1),
-                              h("td", null, t1Names),
-                              h("td", null, t2Names),
-                              h("td", null, winnerNames),
-                              h("td", null, formatTime(m.time)),
-                            ]
-                          );
-                        })
+                    "button",
+                    {
+                      className: "notification-4d-close",
+                      onClick: () => dismissNotification(n.id),
+                    },
+                    "×"
                   ),
                 ]
-              ),
-            ]
+              )
+            )
           ),
         ]
       );
