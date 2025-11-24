@@ -2,7 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Badminton Tracker – React + Firebase</title>
+
+  <!-- Hint browser to connect to CDNs faster -->
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://unpkg.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+
   <style>
     * {
       box-sizing: border-box;
@@ -596,6 +604,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Create Firestore query refs ONCE (better performance)
+    const playersRef = db.collection("players").orderBy("createdAt", "asc");
+    const matchesRef = db.collection("matches").orderBy("time", "desc");
+    const pendingRef = db.collection("pendingRequests").orderBy("createdAt", "desc");
+
     const { useState, useEffect, useMemo, createElement: h } = React;
     const ADMIN_PIN = "2727";
 
@@ -642,10 +655,6 @@
 
     // ---------- App ----------
     function App() {
-      const playersRef = db.collection("players").orderBy("createdAt", "asc");
-      const matchesRef = db.collection("matches").orderBy("time", "desc");
-      const pendingRef = db.collection("pendingRequests").orderBy("createdAt", "desc");
-
       const players = useCollectionRef(playersRef);
       const matches = useCollectionRef(matchesRef);
       const pendingRequests = useCollectionRef(pendingRef);
