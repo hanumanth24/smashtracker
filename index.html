@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Badminton Group Win Tracker</title>
+  <title>Badminton Group Win Tracker (Synced)</title>
   <style>
     * {
       box-sizing: border-box;
@@ -66,7 +66,7 @@
       align-items: flex-start;
     }
 
-    /* Add player request form */
+    /* Player request form */
     .player-form-card {
       padding: 12px 14px;
       border-radius: 14px;
@@ -186,7 +186,6 @@
       background: #ffffff;
     }
 
-    /* highlight row for hot streak */
     .players-table tbody tr.streak-hot {
       background: #dcfce7 !important;
     }
@@ -564,7 +563,6 @@
       filter: brightness(1.03);
     }
 
-    /* Responsive */
     @media (max-width: 900px) {
       .top-layout {
         grid-template-columns: minmax(0, 1fr);
@@ -584,7 +582,7 @@
       .player-matches-table td:nth-child(1),
       .pending-table th:nth-child(1),
       .pending-table td:nth-child(1) {
-        display: none; /* hide index on small screens */
+        display: none;
       }
     }
   </style>
@@ -593,7 +591,7 @@
   <div class="app-container">
     <h1>🏸 Badminton Group Tracker</h1>
     <div class="subtitle">
-      Friends can submit requests. Only admin (with PIN) can approve and update scores.
+      Friends can submit requests. Only admin (with PIN) can approve and update scores. Data syncs across devices via Firebase.
     </div>
 
     <!-- Top layout: players + player details -->
@@ -627,15 +625,13 @@
                 <th>Actions (Admin PIN)</th>
               </tr>
             </thead>
-            <tbody id="players-body">
-              <!-- Rows will be added dynamically -->
-            </tbody>
+            <tbody id="players-body"></tbody>
           </table>
         </div>
 
         <div class="results-legend muted">
-          Legend: circles show last 5 matches (newest on the left) → 
-          <span class="result-pill win">W</span> Win, 
+          Legend: circles show last 5 matches (newest on the left) →
+          <span class="result-pill win">W</span> Win,
           <span class="result-pill loss">L</span> Loss.
           Rows highlighted in light green indicate a win streak of 3+.
         </div>
@@ -667,8 +663,8 @@
         <span class="tag-pill">Admin will approve and update scores.</span>
       </div>
       <p>
-        Select 2 players per team and choose the winner. This will create a
-        <strong>Pending Match Request</strong>. Admin can later approve it with PIN to update points & history.
+        Select 2 players per team and choose the winner. This creates a
+        <strong>Pending Match Request</strong>. Admin approves it with PIN; then points & history update for everyone.
       </p>
 
       <form id="match-form">
@@ -742,9 +738,7 @@
               <th>Actions (PIN)</th>
             </tr>
           </thead>
-          <tbody id="pending-body">
-            <!-- Pending requests go here -->
-          </tbody>
+          <tbody id="pending-body"></tbody>
         </table>
       </div>
     </div>
@@ -776,40 +770,68 @@
               <th>Time</th>
             </tr>
           </thead>
-          <tbody id="matches-body">
-            <!-- Match rows will be added dynamically -->
-          </tbody>
+          <tbody id="matches-body"></tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <script>
-    // ===== Admin PIN (change this to your own) =====
+  <!-- Firebase + App Logic -->
+  <script type="module">
+    // ===== 1. Firebase imports (v12.6.0 modular SDK via CDN) =====
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      addDoc,
+      updateDoc,
+      deleteDoc,
+      onSnapshot,
+      query,
+      orderBy,
+      serverTimestamp,
+      increment
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+    // ===== 2. Your Firebase config (from console) =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX8k2jee_uB5WYvbK7RdZrnX0-8-wOUuE",
+      authDomain: "badminton-tracker-558c1.firebaseapp.com",
+      projectId: "badminton-tracker-558c1",
+      storageBucket: "badminton-tracker-558c1.firebasestorage.app",
+      messagingSenderId: "980136762546",
+      appId: "1:980136762546:web:cdd471e086d53e4bd27dab",
+      measurementId: "G-FQ82F0MX5E"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ===== 3. Admin PIN =====
     const ADMIN_PIN = "2727";
 
     function confirmAdmin(actionDescription) {
       const entered = prompt("Admin approval required to " + actionDescription + ". Enter PIN:");
-      if (entered === null) return false; // cancel
+      if (entered === null) return false;
       if (entered === ADMIN_PIN) return true;
       alert("Wrong PIN");
       return false;
     }
 
-    // LocalStorage keys
-    const PLAYERS_KEY = "badminton_group_tracker_players_v2";
-    const MATCHES_KEY = "badminton_group_tracker_matches_v1";
-    const PENDING_KEY = "badminton_group_tracker_pending_v1";
+    // ===== 4. Firestore collection refs =====
+    const playersCol = collection(db, "players");
+    const matchesCol = collection(db, "matches");
+    const pendingCol = collection(db, "pendingRequests");
 
-    // In-memory store
-    let players = []; // { id, name, points, losses }
-    let matches = []; // { id, time, team1Ids:[], team2Ids:[], winningTeam:1|2 }
-    let pendingRequests = []; // { id, type:'player'|'match', createdAt, payload: {...} }
-
+    // ===== 5. Local state (mirrors Firestore) =====
+    let players = [];
+    let matches = [];
+    let pendingRequests = [];
     let selectedPlayerId = null;
     let historyFilter = "all";
 
-    // DOM refs
+    // ===== 6. DOM refs =====
     const playerForm = document.getElementById("player-form");
     const playerNameInput = document.getElementById("player-name");
     const playersBody = document.getElementById("players-body");
@@ -838,88 +860,45 @@
       team2Player2Select,
     ];
 
-    // Load from localStorage
-    function loadPlayersFromStorage() {
-      try {
-        const raw = localStorage.getItem(PLAYERS_KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          players = parsed;
-        }
-      } catch (e) {
-        console.error("Failed to load players from localStorage", e);
+    // ===== 7. Real-time listeners =====
+    onSnapshot(
+      query(playersCol, orderBy("createdAt", "asc")),
+      (snapshot) => {
+        players = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        renderEverything();
       }
-    }
+    );
 
-    function loadMatchesFromStorage() {
-      try {
-        const raw = localStorage.getItem(MATCHES_KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          matches = parsed;
-        }
-      } catch (e) {
-        console.error("Failed to load matches from localStorage", e);
+    onSnapshot(
+      query(matchesCol, orderBy("time", "desc")),
+      (snapshot) => {
+        matches = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        renderEverything();
       }
-    }
+    );
 
-    function loadPendingFromStorage() {
-      try {
-        const raw = localStorage.getItem(PENDING_KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          pendingRequests = parsed;
-        }
-      } catch (e) {
-        console.error("Failed to load pending requests", e);
+    onSnapshot(
+      query(pendingCol, orderBy("createdAt", "desc")),
+      (snapshot) => {
+        pendingRequests = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        renderEverything();
       }
-    }
+    );
 
-    // Save to localStorage
-    function savePlayersToStorage() {
-      try {
-        localStorage.setItem(PLAYERS_KEY, JSON.stringify(players));
-      } catch (e) {
-        console.error("Failed to save players", e);
-      }
-    }
-
-    function saveMatchesToStorage() {
-      try {
-        localStorage.setItem(MATCHES_KEY, JSON.stringify(matches));
-      } catch (e) {
-        console.error("Failed to save matches", e);
-      }
-    }
-
-    function savePendingToStorage() {
-      try {
-        localStorage.setItem(PENDING_KEY, JSON.stringify(pendingRequests));
-      } catch (e) {
-        console.error("Failed to save pending requests", e);
-      }
-    }
-
-    // Helper: get player name by id
+    // ===== helper: names & select options =====
     function getPlayerNameById(id) {
-      const player = players.find((p) => p.id === id);
-      return player ? player.name : "Unknown";
+      const p = players.find((pl) => pl.id === id);
+      return p ? p.name : "Unknown";
     }
 
-    // Helper: fill all select dropdowns with current players
     function populatePlayerOptions() {
       const selectedIds = new Map();
       teamSelects.forEach((s) => {
-        if (s.value) {
-          selectedIds.set(s, Number(s.value));
-        }
+        if (s.value) selectedIds.set(s, s.value);
       });
 
       teamSelects.forEach((select) => {
-        const currentValue = select.value ? Number(select.value) : null;
+        const currentValue = select.value || null;
 
         const blockedIds = new Set(
           Array.from(selectedIds.entries())
@@ -928,55 +907,45 @@
         );
 
         select.innerHTML = "";
-
         const placeholder = document.createElement("option");
         placeholder.value = "";
         placeholder.textContent = "Select player";
         select.appendChild(placeholder);
 
         players.forEach((p) => {
-          if (blockedIds.has(p.id) && p.id !== currentValue) {
-            return;
-          }
+          if (blockedIds.has(p.id) && p.id !== currentValue) return;
           const option = document.createElement("option");
-          option.value = String(p.id);
+          option.value = p.id;
           option.textContent = p.name;
           select.appendChild(option);
         });
 
         if (
-          currentValue !== null &&
-          Array.from(select.options).some(
-            (opt) => Number(opt.value) === currentValue
-          )
+          currentValue &&
+          Array.from(select.options).some((opt) => opt.value === currentValue)
         ) {
-          select.value = String(currentValue);
+          select.value = currentValue;
         }
       });
     }
 
-    // ----- FRIEND REQUESTS -----
-
-    // Request new player (friends)
-    playerForm.addEventListener("submit", (e) => {
+    // ===== FRIEND REQUESTS =====
+    playerForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = playerNameInput.value.trim();
       if (!name) return;
 
-      const req = {
-        id: Date.now(),
+      await addDoc(pendingCol, {
         type: "player",
-        createdAt: new Date().toISOString(),
-        payload: { name },
-      };
-      pendingRequests.unshift(req);
+        name,
+        createdAt: serverTimestamp(),
+      });
+
       playerNameInput.value = "";
-      renderEverything();
       alert("Player request submitted. Admin will approve it.");
     });
 
-    // Request match (friends)
-    matchForm.addEventListener("submit", (e) => {
+    matchForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       if (players.length < 4) {
@@ -996,26 +965,21 @@
       }
 
       const ids = [t1p1, t1p2, t2p1, t2p2];
-      const uniqueIds = new Set(ids);
-      if (uniqueIds.size !== 4) {
+      if (new Set(ids).size !== 4) {
         alert("Each position must have a different player (no duplicates).");
         return;
       }
 
-      const team1Ids = [t1p1, t1p2].map((id) => Number(id));
-      const team2Ids = [t2p1, t2p2].map((id) => Number(id));
+      const team1Ids = [t1p1, t1p2];
+      const team2Ids = [t2p1, t2p2];
 
-      const req = {
-        id: Date.now(),
+      await addDoc(pendingCol, {
         type: "match",
-        createdAt: new Date().toISOString(),
-        payload: {
-          team1Ids,
-          team2Ids,
-          winningTeam: Number(winningTeam),
-        },
-      };
-      pendingRequests.unshift(req);
+        team1Ids,
+        team2Ids,
+        winningTeam: Number(winningTeam),
+        createdAt: serverTimestamp(),
+      });
 
       team1Player1Select.value = "";
       team1Player2Select.value = "";
@@ -1023,77 +987,59 @@
       team2Player2Select.value = "";
       winningTeamSelect.value = "";
 
-      renderEverything();
       alert("Match request submitted. Admin will approve it.");
     });
 
-    // ----- ADMIN ACTIONS (PIN) -----
-
-    // Update points/losses manually from table buttons
-    function updatePlayer(id, type) {
+    // ===== ADMIN ACTIONS (PIN) =====
+    async function updatePlayer(id, type) {
       if (!confirmAdmin("update this player's score")) return;
-
-      players = players.map((p) => {
-        if (p.id === id) {
-          if (type === "point") p.points += 1;
-          if (type === "loss") p.losses += 1;
-        }
-        return p;
-      });
-
-      renderEverything();
+      const ref = doc(db, "players", id);
+      const updates =
+        type === "point" ? { points: increment(1) } : { losses: increment(1) };
+      await updateDoc(ref, updates);
     }
 
-    // Remove player
-    function removePlayer(id) {
+    async function removePlayer(id) {
       if (!confirmAdmin("remove this player")) return;
-
-      players = players.filter((p) => p.id !== id);
-      if (selectedPlayerId === id) {
-        selectedPlayerId = null;
-      }
-      renderEverything();
+      await deleteDoc(doc(db, "players", id));
+      if (selectedPlayerId === id) selectedPlayerId = null;
     }
 
-    // Reset all stats
-    resetAllBtn.addEventListener("click", () => {
+    resetAllBtn.addEventListener("click", async () => {
       if (!players.length) return;
       if (!confirmAdmin("reset all players' points and losses")) return;
-
-      players = players.map((p) => ({ ...p, points: 0, losses: 0 }));
-      renderEverything();
+      await Promise.all(
+        players.map((p) =>
+          updateDoc(doc(db, "players", p.id), { points: 0, losses: 0 })
+        )
+      );
     });
 
-    // Clear match history
-    clearHistoryBtn.addEventListener("click", () => {
+    clearHistoryBtn.addEventListener("click", async () => {
       if (!matches.length) return;
       if (!confirmAdmin("clear the entire match history")) return;
-
-      matches = [];
-      renderEverything();
+      await Promise.all(
+        matches.map((m) => deleteDoc(doc(db, "matches", m.id)))
+      );
     });
 
-    // Approve / Reject pending requests
-    function approvePendingRequest(id) {
+    async function approvePendingRequest(id) {
       const req = pendingRequests.find((r) => r.id === id);
       if (!req) return;
-
       if (!confirmAdmin("approve this " + req.type + " request")) return;
 
       if (req.type === "player") {
-        const name = req.payload.name.trim();
+        const name = (req.name || "").trim();
         if (name) {
-          const newPlayer = {
-            id: Date.now(),
+          await addDoc(playersCol, {
             name,
             points: 0,
             losses: 0,
-          };
-          players.push(newPlayer);
+            createdAt: serverTimestamp(),
+          });
         }
       } else if (req.type === "match") {
-        const { team1Ids, team2Ids, winningTeam } = req.payload;
-
+        const { team1Ids, team2Ids, winningTeam } = req;
         let winningIds, losingIds;
         if (winningTeam === 1) {
           winningIds = team1Ids;
@@ -1103,58 +1049,50 @@
           losingIds = team1Ids;
         }
 
-        players = players.map((p) => {
-          if (winningIds.includes(p.id)) {
-            return { ...p, points: p.points + 1 };
-          }
-          if (losingIds.includes(p.id)) {
-            return { ...p, losses: p.losses + 1 };
-          }
-          return p;
-        });
+        await Promise.all(
+          winningIds.map((pid) =>
+            updateDoc(doc(db, "players", pid), { points: increment(1) })
+          )
+        );
+        await Promise.all(
+          losingIds.map((pid) =>
+            updateDoc(doc(db, "players", pid), { losses: increment(1) })
+          )
+        );
 
-        const match = {
-          id: Date.now(),
-          time: new Date().toISOString(),
+        await addDoc(matchesCol, {
           team1Ids,
           team2Ids,
           winningTeam,
-        };
-        matches.unshift(match);
+          time: serverTimestamp(),
+        });
       }
 
-      pendingRequests = pendingRequests.filter((r) => r.id !== id);
-      renderEverything();
+      await deleteDoc(doc(db, "pendingRequests", id));
     }
 
-    function rejectPendingRequest(id) {
+    async function rejectPendingRequest(id) {
       const req = pendingRequests.find((r) => r.id === id);
       if (!req) return;
-
       const ok = confirm("Reject this " + req.type + " request?");
       if (!ok) return;
-
-      pendingRequests = pendingRequests.filter((r) => r.id !== id);
-      renderEverything();
+      await deleteDoc(doc(db, "pendingRequests", id));
     }
 
-    // ----- STATS & RENDERING -----
-
-    // Calculate points percentage
+    // ===== STATS & RENDERING =====
     function getPointsPercentage(player) {
-      const totalGames = player.points + player.losses;
-      if (totalGames === 0) return "0%";
-      const pct = (player.points / totalGames) * 100;
+      const total = (player.points || 0) + (player.losses || 0);
+      if (total === 0) return "0%";
+      const pct = (player.points / total) * 100;
       return pct.toFixed(1) + "%";
     }
 
-    // Get last up to 5 results for a player, newest first: ['W', 'L', ...]
     function getLastResultsForPlayer(playerId, limit = 5) {
       const results = [];
       for (const match of matches) {
         if (
-          match.team1Ids.includes(playerId) ||
-          match.team2Ids.includes(playerId)
+          match.team1Ids?.includes(playerId) ||
+          match.team2Ids?.includes(playerId)
         ) {
           const isTeam1 = match.team1Ids.includes(playerId);
           const win =
@@ -1167,35 +1105,30 @@
       return results;
     }
 
-    // Compute current win streak
     function getCurrentWinStreak(playerId) {
       let streak = 0;
       for (const match of matches) {
         if (
-          match.team1Ids.includes(playerId) ||
-          match.team2Ids.includes(playerId)
+          match.team1Ids?.includes(playerId) ||
+          match.team2Ids?.includes(playerId)
         ) {
           const isTeam1 = match.team1Ids.includes(playerId);
           const win =
             (isTeam1 && match.winningTeam === 1) ||
             (!isTeam1 && match.winningTeam === 2);
-          if (win) {
-            streak += 1;
-          } else {
-            break;
-          }
+          if (win) streak++;
+          else break;
         }
       }
       return streak;
     }
 
-    // Render players table
     function renderPlayersTable() {
       const sorted = [...players].sort((a, b) => {
-        if (b.points === a.points) {
-          return a.name.localeCompare(b.name);
+        if ((b.points || 0) === (a.points || 0)) {
+          return (a.name || "").localeCompare(b.name || "");
         }
-        return b.points - a.points;
+        return (b.points || 0) - (a.points || 0);
       });
 
       playersBody.innerHTML = "";
@@ -1205,9 +1138,7 @@
         const streak = getCurrentWinStreak(player.id);
 
         const tr = document.createElement("tr");
-        if (streak >= 3) {
-          tr.classList.add("streak-hot");
-        }
+        if (streak >= 3) tr.classList.add("streak-hot");
 
         tr.innerHTML = `
           <td>${index + 1}</td>
@@ -1221,8 +1152,8 @@
                 : ""
             }
           </td>
-          <td>${player.points}</td>
-          <td>${player.losses}</td>
+          <td>${player.points || 0}</td>
+          <td>${player.losses || 0}</td>
           <td>${getPointsPercentage(player)}</td>
           <td class="actions">
             <div class="last-results">
@@ -1243,42 +1174,42 @@
           </td>
         `;
 
-        const pointBtn = tr.querySelector(".win");
-        const lossBtn = tr.querySelector(".loss");
-        const removeBtn = tr.querySelector(".remove");
-        const nameBtn = tr.querySelector(".player-link");
-
-        pointBtn.addEventListener("click", () =>
+        tr.querySelector(".win").addEventListener("click", () =>
           updatePlayer(player.id, "point")
         );
-        lossBtn.addEventListener("click", () =>
+        tr.querySelector(".loss").addEventListener("click", () =>
           updatePlayer(player.id, "loss")
         );
-        removeBtn.addEventListener("click", () => removePlayer(player.id));
-        nameBtn.addEventListener("click", () => showPlayerDetails(player.id));
+        tr.querySelector(".remove").addEventListener("click", () =>
+          removePlayer(player.id)
+        );
+        tr.querySelector(".player-link").addEventListener("click", () =>
+          showPlayerDetails(player.id)
+        );
 
         playersBody.appendChild(tr);
       });
     }
 
-    // History filter helpers
     function filterMatchesByHistoryFilter() {
       const now = new Date();
       return matches.filter((match) => {
         if (historyFilter === "all") return true;
-
-        const d = new Date(match.time);
+        let d;
+        if (match.time && typeof match.time.toDate === "function") {
+          d = match.time.toDate();
+        } else {
+          d = new Date(match.time || 0);
+        }
         if (Number.isNaN(d.getTime())) return true;
 
         if (historyFilter === "today") {
           return d.toDateString() === now.toDateString();
         }
-
         if (historyFilter === "week") {
           const diffMs = now - d;
           return diffMs >= 0 && diffMs <= 7 * 24 * 60 * 60 * 1000;
         }
-
         return true;
       });
     }
@@ -1288,23 +1219,26 @@
       renderMatchHistory();
     });
 
-    // Render match history
-    function formatTime(isoStr) {
+    function formatTime(tsOrIso) {
       try {
-        const d = new Date(isoStr);
+        let d;
+        if (tsOrIso && typeof tsOrIso.toDate === "function") {
+          d = tsOrIso.toDate();
+        } else {
+          d = new Date(tsOrIso || 0);
+        }
         return (
           d.toLocaleDateString() +
           " " +
           d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
         );
       } catch {
-        return isoStr;
+        return "";
       }
     }
 
     function renderMatchHistory() {
       matchesBody.innerHTML = "";
-
       const filtered = filterMatchesByHistoryFilter();
 
       if (!filtered.length) {
@@ -1316,13 +1250,12 @@
       }
 
       filtered.forEach((match, index) => {
-        const team1Names = match.team1Ids
+        const team1Names = (match.team1Ids || [])
           .map((id) => getPlayerNameById(id))
           .join(" & ");
-        const team2Names = match.team2Ids
+        const team2Names = (match.team2Ids || [])
           .map((id) => getPlayerNameById(id))
           .join(" & ");
-
         const winnerNames =
           match.winningTeam === 1 ? team1Names : team2Names;
 
@@ -1338,7 +1271,6 @@
       });
     }
 
-    // Render pending requests
     function renderPendingRequests() {
       pendingBody.innerHTML = "";
 
@@ -1353,21 +1285,21 @@
 
       pendingRequests.forEach((req, index) => {
         const tr = document.createElement("tr");
-
         let typeLabel = "";
         let details = "";
 
         if (req.type === "player") {
           typeLabel = "New Player";
-          details = `Name: <strong>${req.payload.name}</strong>`;
+          details = `Name: <strong>${req.name}</strong>`;
         } else if (req.type === "match") {
           typeLabel = "Match Result";
-
-          const t1 = req.payload.team1Ids.map(getPlayerNameById).join(" & ");
-          const t2 = req.payload.team2Ids.map(getPlayerNameById).join(" & ");
-          const winner =
-            req.payload.winningTeam === 1 ? "Team 1" : "Team 2";
-
+          const t1 = (req.team1Ids || [])
+            .map((id) => getPlayerNameById(id))
+            .join(" & ");
+          const t2 = (req.team2Ids || [])
+            .map((id) => getPlayerNameById(id))
+            .join(" & ");
+          const winner = req.winningTeam === 1 ? "Team 1" : "Team 2";
           details = `
             <div>Team 1: <strong>${t1}</strong></div>
             <div>Team 2: <strong>${t2}</strong></div>
@@ -1386,21 +1318,20 @@
           </td>
         `;
 
-        const approveBtn = tr.querySelector(".approve-btn");
-        const rejectBtn = tr.querySelector(".reject-btn");
-
-        approveBtn.addEventListener("click", () => approvePendingRequest(req.id));
-        rejectBtn.addEventListener("click", () => rejectPendingRequest(req.id));
+        tr.querySelector(".approve-btn").addEventListener("click", () =>
+          approvePendingRequest(req.id)
+        );
+        tr.querySelector(".reject-btn").addEventListener("click", () =>
+          rejectPendingRequest(req.id)
+        );
 
         pendingBody.appendChild(tr);
       });
     }
 
-    // Player details panel
     function showPlayerDetails(playerId) {
       selectedPlayerId = playerId;
       const player = players.find((p) => p.id === playerId);
-
       if (!player) {
         playerDetailsEl.innerHTML =
           "<p class='muted'>Player not found. Maybe they were removed.</p>";
@@ -1408,7 +1339,8 @@
       }
 
       const playerMatches = matches.filter(
-        (m) => m.team1Ids.includes(playerId) || m.team2Ids.includes(playerId)
+        (m) =>
+          m.team1Ids?.includes(playerId) || m.team2Ids?.includes(playerId)
       );
 
       const wins = playerMatches.filter((m) => {
@@ -1421,7 +1353,7 @@
       const losses = total - wins;
       const pct = total === 0 ? "0%" : ((wins / total) * 100).toFixed(1) + "%";
 
-      const partnerAndOppRows = playerMatches
+      const rows = playerMatches
         .map((m, idx) => {
           const isTeam1 = m.team1Ids.includes(playerId);
           const myTeamIds = isTeam1 ? m.team1Ids : m.team2Ids;
@@ -1431,8 +1363,9 @@
             ? getPlayerNameById(myPartnerId)
             : "-";
           const oppNames = oppTeamIds.map((id) => getPlayerNameById(id)).join(" & ");
-          const isWin = (isTeam1 && m.winningTeam === 1) ||
-                        (!isTeam1 && m.winningTeam === 2);
+          const isWin =
+            (isTeam1 && m.winningTeam === 1) ||
+            (!isTeam1 && m.winningTeam === 2);
           const result = isWin ? "Win" : "Loss";
           const time = formatTime(m.time);
 
@@ -1460,7 +1393,7 @@
           <div class="stat-pill">Wins: ${wins}</div>
           <div class="stat-pill">Losses: ${losses}</div>
           <div class="stat-pill">Win %: ${pct}</div>
-          <div class="stat-pill">Points: ${player.points}</div>
+          <div class="stat-pill">Points: ${player.points || 0}</div>
         </div>
         ${
           total === 0
@@ -1479,7 +1412,7 @@
                 </tr>
               </thead>
               <tbody>
-                ${partnerAndOppRows}
+                ${rows}
               </tbody>
             </table>
           </div>
@@ -1488,32 +1421,19 @@
       `;
     }
 
-    // Render everything + save
     function renderEverything() {
       renderPlayersTable();
       renderMatchHistory();
       renderPendingRequests();
       populatePlayerOptions();
-
-      savePlayersToStorage();
-      saveMatchesToStorage();
-      savePendingToStorage();
-
-      if (selectedPlayerId !== null) {
+      if (selectedPlayerId) {
         showPlayerDetails(selectedPlayerId);
       }
     }
 
-    // Attach change listeners so options update when one is picked
     teamSelects.forEach((select) => {
       select.addEventListener("change", populatePlayerOptions);
     });
-
-    // Initial load
-    loadPlayersFromStorage();
-    loadMatchesFromStorage();
-    loadPendingFromStorage();
-    renderEverything();
   </script>
 </body>
 </html>
