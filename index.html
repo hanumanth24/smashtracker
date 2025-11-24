@@ -1,473 +1,267 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Badminton Tracker – React + Firebase</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
-    }
+<script type="module">
+  import React from "https://esm.sh/react@18.2.0";
+  import ReactDOM from "https://esm.sh/react-dom@18.2.0/client";
 
-    body {
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(circle at top left, #e0f2fe, #f9fafb 40%, #eef2ff);
-      color: #0f172a;
-    }
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    doc,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    onSnapshot,
+    query,
+    orderBy,
+    serverTimestamp,
+    increment
+  } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-    .app-container {
-      max-width: 1100px;
-      margin: 32px auto;
-      padding: 24px 20px 32px;
-      background: #ffffff;
-      border-radius: 18px;
-      box-shadow:
-        0 18px 40px rgba(15, 23, 42, 0.12),
-        0 0 0 1px rgba(148, 163, 184, 0.18);
-    }
+  // ---------- Firebase config (your project) ----------
+  const firebaseConfig = {
+    apiKey: "AIzaSyCX8k2jee_uB5WYvbK7RdZrnX0-8-wOUuE",
+    authDomain: "badminton-tracker-558c1.firebaseapp.com",
+    projectId: "badminton-tracker-558c1",
+    storageBucket: "badminton-tracker-558c1.firebasestorage.app",
+    messagingSenderId: "980136762546",
+    appId: "1:980136762546:web:cdd471e086d53e4bd27dab",
+    measurementId: "G-FQ82F0MX5E"
+  };
 
-    h1 {
-      text-align: center;
-      margin-bottom: 4px;
-      font-size: 26px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      color: #0f172a;
-    }
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    .subtitle {
-      text-align: center;
-      font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 20px;
-    }
+  const ADMIN_PIN = "2727";
+  const h = React.createElement;
 
-    h2 {
-      margin-top: 20px;
-      margin-bottom: 10px;
-      font-size: 18px;
-      color: #111827;
-    }
+  // ---------- Small hooks ----------
+  function useCollection(q) {
+    const [docs, setDocs] = React.useState([]);
 
-    .section-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: #9ca3af;
-      margin-bottom: 4px;
-    }
+    React.useEffect(() => {
+      const unsub = onSnapshot(q, (snap) => {
+        const arr = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setDocs(arr);
+      });
+      return unsub;
+    }, [q]);
 
-    .top-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr);
-      gap: 24px;
-      align-items: flex-start;
-    }
+    return docs;
+  }
 
-    .card {
-      border-radius: 16px;
-      border: 1px solid #e5e7eb;
-      background: #f9fafb;
-      padding: 12px 14px 14px;
-    }
+  // ---------- Helpers ----------
+  function askAdmin(action) {
+    const entered = prompt("Admin PIN required to " + action + ". Enter PIN:");
+    if (entered === null) return false;
+    if (entered === ADMIN_PIN) return true;
+    alert("Wrong PIN");
+    return false;
+  }
 
-    .player-form {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .player-form input {
-      flex: 1;
-      padding: 8px 10px;
-      border-radius: 10px;
-      border: 1px solid #cbd5f5;
-      font-size: 13px;
-    }
-
-    .player-form input:focus {
-      outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 1px #2563eb33;
-    }
-
-    .btn {
-      border: none;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 12px;
-      padding: 7px 14px;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #2563eb, #4f46e5);
-      color: #f9fafb;
-      font-weight: 600;
-    }
-
-    .btn-danger {
-      background: #fee2e2;
-      color: #b91c1c;
-      border: 1px solid #fecaca;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 6px;
-      background: #fff;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    th, td {
-      font-size: 12px;
-      padding: 7px 8px;
-      text-align: center;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    thead {
-      background: #e5e7eb4d;
-    }
-
-    tbody tr:nth-child(even) {
-      background: #f3f4f6;
-    }
-
-    .actions button {
-      margin: 0 2px;
-      padding: 3px 8px;
-      font-size: 11px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-    }
-
-    .actions .win {
-      background: #22c55e1a;
-      color: #15803d;
-      border: 1px solid #22c55e66;
-    }
-
-    .actions .loss {
-      background: #fb923c1a;
-      color: #c2410c;
-      border: 1px solid #fb923c66;
-    }
-
-    .actions .remove {
-      background: #fecaca;
-      color: #b91c1c;
-      border: 1px solid #fca5a5;
-    }
-
-    .match-section {
-      margin-top: 20px;
-      border-radius: 16px;
-      background: radial-gradient(circle at top left, #dbeafe, #eff6ff);
-      border: 1px solid #bfdbfe;
-      padding: 14px 14px 16px;
-    }
-
-    .teams-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .team-card {
-      flex: 1;
-      min-width: 230px;
-      background: #ffffffcc;
-      border-radius: 12px;
-      border: 1px solid #dbeafe;
-      padding: 10px 12px;
-    }
-
-    .team-card h3 {
-      margin: 0 0 6px;
-      font-size: 14px;
-      color: #111827;
-    }
-
-    select {
-      width: 100%;
-      padding: 7px 9px;
-      border-radius: 10px;
-      border: 1px solid #cbd5f5;
-      background: #ffffff;
-      font-size: 12px;
-    }
-
-    select:focus {
-      outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 1px #2563eb33;
-    }
-
-    label {
-      font-size: 11px;
-      color: #4b5563;
-      display: block;
-      margin-bottom: 2px;
-    }
-
-    .muted {
-      font-size: 11px;
-      color: #6b7280;
-    }
-
-    .history-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    #root {
-      min-height: 100vh;
-    }
-
-    @media (max-width: 900px) {
-      .top-layout {
-        grid-template-columns: minmax(0, 1fr);
+  function formatTime(tsOrIso) {
+    try {
+      let d;
+      if (tsOrIso && typeof tsOrIso.toDate === "function") {
+        d = tsOrIso.toDate();
+      } else {
+        d = new Date(tsOrIso || 0);
       }
+      return (
+        d.toLocaleDateString() +
+        " " +
+        d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      );
+    } catch {
+      return "";
+    }
+  }
+
+  function getPointsPct(p) {
+    const points = p.points || 0;
+    const losses = p.losses || 0;
+    const total = points + losses;
+    if (total === 0) return "0%";
+    return ((points / total) * 100).toFixed(1) + "%";
+  }
+
+  // ---------- App component ----------
+  function App() {
+    const players = useCollection(
+      query(collection(db, "players"), orderBy("createdAt", "asc"))
+    );
+    const matches = useCollection(
+      query(collection(db, "matches"), orderBy("time", "desc"))
+    );
+    const pendingRequests = useCollection(
+      query(collection(db, "pendingRequests"), orderBy("createdAt", "desc"))
+    );
+
+    const [newName, setNewName] = React.useState("");
+    const [historyFilter, setHistoryFilter] = React.useState("all");
+
+    const [team1, setTeam1] = React.useState({ p1: "", p2: "" });
+    const [team2, setTeam2] = React.useState({ p1: "", p2: "" });
+    const [winnerTeam, setWinnerTeam] = React.useState("");
+
+    const playerMap = React.useMemo(() => {
+      const map = new Map();
+      players.forEach((p) => map.set(p.id, p));
+      return map;
+    }, [players]);
+
+    function getPlayerName(id) {
+      return playerMap.get(id)?.name || "Unknown";
     }
 
-    @media (max-width: 600px) {
-      .player-form {
-        flex-direction: column;
-      }
+    const sortedPlayers = React.useMemo(() => {
+      const arr = [...players];
+      arr.sort((a, b) => {
+        if ((b.points || 0) === (a.points || 0)) {
+          return (a.name || "").localeCompare(b.name || "");
+        }
+        return (b.points || 0) - (a.points || 0);
+      });
+      return arr;
+    }, [players]);
 
-      th:nth-child(1),
-      td:nth-child(1) {
-        display: none;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div id="root"></div>
-
-  <!-- React 18 from CDN -->
-  <script type="module">
-    import React from "https://esm.sh/react@18.2.0";
-    import ReactDOM from "https://esm.sh/react-dom@18.2.0/client";
-
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      doc,
-      addDoc,
-      updateDoc,
-      deleteDoc,
-      onSnapshot,
-      query,
-      orderBy,
-      serverTimestamp,
-      increment
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-    // ---------- Firebase config (your project) ----------
-    const firebaseConfig = {
-      apiKey: "AIzaSyCX8k2jee_uB5WYvbK7RdZrnX0-8-wOUuE",
-      authDomain: "badminton-tracker-558c1.firebaseapp.com",
-      projectId: "badminton-tracker-558c1",
-      storageBucket: "badminton-tracker-558c1.firebasestorage.app",
-      messagingSenderId: "980136762546",
-      appId: "1:980136762546:web:cdd471e086d53e4bd27dab",
-      measurementId: "G-FQ82F0MX5E"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const h = React.createElement;
-
-    // ---------- Small hooks ----------
-    function useCollection(q) {
-      const [docs, setDocs] = React.useState([]);
-
-      React.useEffect(() => {
-        const unsub = onSnapshot(q, (snap) => {
-          const arr = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-          setDocs(arr);
-        });
-        return unsub;
-      }, [q]);
-
-      return docs;
-    }
-
-    // ---------- Pure helpers ----------
-    function formatTime(tsOrIso) {
-      try {
+    function filteredMatches() {
+      if (historyFilter === "all") return matches;
+      const now = new Date();
+      return matches.filter((m) => {
         let d;
-        if (tsOrIso && typeof tsOrIso.toDate === "function") {
-          d = tsOrIso.toDate();
+        if (m.time && typeof m.time.toDate === "function") {
+          d = m.time.toDate();
         } else {
-          d = new Date(tsOrIso || 0);
+          d = new Date(m.time || 0);
         }
-        return (
-          d.toLocaleDateString() +
-          " " +
-          d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        );
-      } catch {
-        return "";
-      }
+        if (Number.isNaN(d.getTime())) return true;
+
+        if (historyFilter === "today") {
+          return d.toDateString() === now.toDateString();
+        }
+        if (historyFilter === "week") {
+          const diff = now - d;
+          return diff >= 0 && diff <= 7 * 24 * 60 * 60 * 1000;
+        }
+        return true;
+      });
     }
 
-    function getPointsPct(p) {
-      const points = p.points || 0;
-      const losses = p.losses || 0;
-      const total = points + losses;
-      if (total === 0) return "0%";
-      return ((points / total) * 100).toFixed(1) + "%";
+    // ---------- Firestore refs ----------
+    const playersCol = collection(db, "players");
+    const matchesCol = collection(db, "matches");
+    const pendingCol = collection(db, "pendingRequests");
+
+    // ---------- FRIEND ACTIONS (create pending) ----------
+    async function requestNewPlayer(e) {
+      e.preventDefault();
+      const name = newName.trim();
+      if (!name) return;
+      await addDoc(pendingCol, {
+        type: "player",
+        name,
+        createdAt: serverTimestamp(),
+      });
+      setNewName("");
+      alert("Player request submitted. Admin will approve it.");
     }
 
-    // ---------- App component ----------
-    function App() {
-      const players = useCollection(
-        query(collection(db, "players"), orderBy("createdAt", "asc"))
+    async function requestMatch(e) {
+      e.preventDefault();
+      if (players.length < 4) {
+        alert("Add at least 4 players first.");
+        return;
+      }
+      const ids = [team1.p1, team1.p2, team2.p1, team2.p2];
+      if (ids.some((id) => !id)) {
+        alert("Select all 4 players.");
+        return;
+      }
+      if (new Set(ids).size !== 4) {
+        alert("Each position must have a different player.");
+        return;
+      }
+      if (!winnerTeam) {
+        alert("Select winning team.");
+        return;
+      }
+
+      const team1Ids = [team1.p1, team1.p2];
+      const team2Ids = [team2.p1, team2.p2];
+
+      await addDoc(pendingCol, {
+        type: "match",
+        team1Ids,
+        team2Ids,
+        winningTeam: Number(winnerTeam),
+        createdAt: serverTimestamp(),
+      });
+
+      setTeam1({ p1: "", p2: "" });
+      setTeam2({ p1: "", p2: "" });
+      setWinnerTeam("");
+      alert("Match request submitted. Admin will approve it.");
+    }
+
+    // ---------- ADMIN ACTIONS ----------
+    async function addPoint(id) {
+      if (!askAdmin("add a point")) return;
+      await updateDoc(doc(db, "players", id), { points: increment(1) });
+    }
+
+    async function addLoss(id) {
+      if (!askAdmin("add a loss")) return;
+      await updateDoc(doc(db, "players", id), { losses: increment(1) });
+    }
+
+    async function removePlayer(id) {
+      if (!askAdmin("remove this player")) return;
+      await deleteDoc(doc(db, "players", id));
+    }
+
+    async function resetAll() {
+      if (!players.length) return;
+      if (!askAdmin("reset all points & losses")) return;
+      await Promise.all(
+        players.map((p) =>
+          updateDoc(doc(db, "players", p.id), { points: 0, losses: 0 })
+        )
       );
-      const matches = useCollection(
-        query(collection(db, "matches"), orderBy("time", "desc"))
+    }
+
+    async function clearHistory() {
+      if (!matches.length) return;
+      if (!askAdmin("clear ALL match history")) return;
+      await Promise.all(
+        matches.map((m) => deleteDoc(doc(db, "matches", m.id)))
       );
+    }
 
-      const [newName, setNewName] = React.useState("");
-      const [historyFilter, setHistoryFilter] = React.useState("all");
+    async function approveRequest(id) {
+      const req = pendingRequests.find((r) => r.id === id);
+      if (!req) return;
+      if (!askAdmin("approve this " + req.type + " request")) return;
 
-      const [team1, setTeam1] = React.useState({ p1: "", p2: "" });
-      const [team2, setTeam2] = React.useState({ p1: "", p2: "" });
-      const [winnerTeam, setWinnerTeam] = React.useState("");
-
-      const playerMap = React.useMemo(() => {
-        const map = new Map();
-        players.forEach((p) => map.set(p.id, p));
-        return map;
-      }, [players]);
-
-      function getPlayerName(id) {
-        return playerMap.get(id)?.name || "Unknown";
-      }
-
-      // ---------- derived lists ----------
-      const sortedPlayers = React.useMemo(() => {
-        const arr = [...players];
-        arr.sort((a, b) => {
-          if ((b.points || 0) === (a.points || 0)) {
-            return (a.name || "").localeCompare(b.name || "");
-          }
-          return (b.points || 0) - (a.points || 0);
-        });
-        return arr;
-      }, [players]);
-
-      function filteredMatches() {
-        if (historyFilter === "all") return matches;
-        const now = new Date();
-        return matches.filter((m) => {
-          let d;
-          if (m.time && typeof m.time.toDate === "function") {
-            d = m.time.toDate();
-          } else {
-            d = new Date(m.time || 0);
-          }
-          if (Number.isNaN(d.getTime())) return true;
-
-          if (historyFilter === "today") {
-            return d.toDateString() === now.toDateString();
-          }
-          if (historyFilter === "week") {
-            const diff = now - d;
-            return diff >= 0 && diff <= 7 * 24 * 60 * 60 * 1000;
-          }
-          return true;
-        });
-      }
-
-      // ---------- actions ----------
-      async function addPlayer(e) {
-        e.preventDefault();
-        const name = newName.trim();
-        if (!name) return;
-        await addDoc(collection(db, "players"), {
-          name,
-          points: 0,
-          losses: 0,
-          createdAt: serverTimestamp(),
-        });
-        setNewName("");
-      }
-
-      async function addPoint(id) {
-        await updateDoc(doc(db, "players", id), { points: increment(1) });
-      }
-
-      async function addLoss(id) {
-        await updateDoc(doc(db, "players", id), { losses: increment(1) });
-      }
-
-      async function removePlayer(id) {
-        const ok = confirm("Remove this player?");
-        if (!ok) return;
-        await deleteDoc(doc(db, "players", id));
-      }
-
-      async function resetAll() {
-        if (!players.length) return;
-        const ok = confirm("Reset all points and losses?");
-        if (!ok) return;
-        await Promise.all(
-          players.map((p) =>
-            updateDoc(doc(db, "players", p.id), { points: 0, losses: 0 })
-          )
-        );
-      }
-
-      async function clearHistory() {
-        if (!matches.length) return;
-        const ok = confirm("Clear ALL match history?");
-        if (!ok) return;
-        await Promise.all(
-          matches.map((m) => deleteDoc(doc(db, "matches", m.id)))
-        );
-      }
-
-      async function submitMatch(e) {
-        e.preventDefault();
-
-        if (players.length < 4) {
-          alert("Add at least 4 players first.");
-          return;
+      if (req.type === "player") {
+        const name = (req.name || "").trim();
+        if (name) {
+          await addDoc(playersCol, {
+            name,
+            points: 0,
+            losses: 0,
+            createdAt: serverTimestamp(),
+          });
         }
-        const ids = [team1.p1, team1.p2, team2.p1, team2.p2];
-        if (ids.some((id) => !id)) {
-          alert("Select all 4 players.");
-          return;
+      } else if (req.type === "match") {
+        const { team1Ids, team2Ids, winningTeam } = req;
+        let winningIds, losingIds;
+        if (winningTeam === 1) {
+          winningIds = team1Ids;
+          losingIds = team2Ids;
+        } else {
+          winningIds = team2Ids;
+          losingIds = team1Ids;
         }
-        if (new Set(ids).size !== 4) {
-          alert("Each position must have a different player.");
-          return;
-        }
-        if (!winnerTeam) {
-          alert("Select winning team.");
-          return;
-        }
-
-        const team1Ids = [team1.p1, team1.p2];
-        const team2Ids = [team2.p1, team2.p2];
-
-        const winningTeamNum = Number(winnerTeam);
-        const winningIds = winningTeamNum === 1 ? team1Ids : team2Ids;
-        const losingIds = winningTeamNum === 1 ? team2Ids : team1Ids;
 
         await Promise.all(
           winningIds.map((pid) =>
@@ -480,435 +274,542 @@
           )
         );
 
-        await addDoc(collection(db, "matches"), {
+        await addDoc(matchesCol, {
           team1Ids,
           team2Ids,
-          winningTeam: winningTeamNum,
+          winningTeam,
           time: serverTimestamp(),
         });
-
-        setTeam1({ p1: "", p2: "" });
-        setTeam2({ p1: "", p2: "" });
-        setWinnerTeam("");
       }
 
-      // ---------- options for selects ----------
-      function playerOptions(exclude = []) {
-        return players.filter((p) => !exclude.includes(p.id));
-      }
-
-      // ---------- UI ----------
-      return h(
-        "div",
-        { className: "app-container" },
-        [
-          h("h1", null, "🏸 Badminton Group Tracker (React)"),
-          h(
-            "div",
-            { className: "subtitle" },
-            "Data stored in Firebase – open this URL on desktop & mobile, both see the same scores."
-          ),
-
-          // Top layout
-          h(
-            "div",
-            { className: "top-layout" },
-            [
-              // LEFT: players & form
-              h(
-                "div",
-                null,
-                [
-                  h("div", { className: "section-label" }, "Players"),
-                  h("h2", null, "Scoreboard"),
-                  h(
-                    "form",
-                    { onSubmit: addPlayer, className: "player-form" },
-                    [
-                      h("input", {
-                        type: "text",
-                        placeholder: "Add player name (e.g. Hanu)",
-                        value: newName,
-                        onChange: (e) => setNewName(e.target.value),
-                      }),
-                      h(
-                        "button",
-                        { type: "submit", className: "btn btn-primary" },
-                        "Add"
-                      ),
-                    ]
-                  ),
-                  h(
-                    "table",
-                    null,
-                    [
-                      h(
-                        "thead",
-                        null,
-                        h(
-                          "tr",
-                          null,
-                          [
-                            h("th", null, "#"),
-                            h("th", null, "Player"),
-                            h("th", null, "Points"),
-                            h("th", null, "Losses"),
-                            h("th", null, "Points %"),
-                            h("th", null, "Actions"),
-                          ]
-                        )
-                      ),
-                      h(
-                        "tbody",
-                        null,
-                        sortedPlayers.length === 0
-                          ? h(
-                              "tr",
-                              null,
-                              h(
-                                "td",
-                                { colSpan: 6, className: "muted" },
-                                "No players yet. Add one above."
-                              )
-                            )
-                          : sortedPlayers.map((p, idx) =>
-                              h(
-                                "tr",
-                                { key: p.id },
-                                [
-                                  h("td", null, idx + 1),
-                                  h("td", null, p.name),
-                                  h("td", null, p.points || 0),
-                                  h("td", null, p.losses || 0),
-                                  h("td", null, getPointsPct(p)),
-                                  h(
-                                    "td",
-                                    { className: "actions" },
-                                    [
-                                      h(
-                                        "button",
-                                        {
-                                          className: "win",
-                                          onClick: () => addPoint(p.id),
-                                        },
-                                        "+Point"
-                                      ),
-                                      h(
-                                        "button",
-                                        {
-                                          className: "loss",
-                                          onClick: () => addLoss(p.id),
-                                        },
-                                        "+Loss"
-                                      ),
-                                      h(
-                                        "button",
-                                        {
-                                          className: "remove",
-                                          onClick: () => removePlayer(p.id),
-                                        },
-                                        "✕"
-                                      ),
-                                    ]
-                                  ),
-                                ]
-                              )
-                            )
-                      ),
-                    ]
-                  ),
-                  h(
-                    "div",
-                    { style: { marginTop: "8px", textAlign: "right" } },
-                    h(
-                      "button",
-                      { className: "btn btn-danger", onClick: resetAll },
-                      "Reset All Points"
-                    )
-                  ),
-                ]
-              ),
-
-              // RIGHT: small summary
-              h(
-                "div",
-                { className: "card" },
-                [
-                  h("div", { className: "section-label" }, "Overview"),
-                  h("h2", null, "Quick Stats"),
-                  h(
-                    "p",
-                    { className: "muted" },
-                    `Players: ${players.length} · Matches: ${matches.length}`
-                  ),
-                  h(
-                    "p",
-                    { className: "muted" },
-                    "This is a lighter React version (no admin approvals). Your earlier vanilla app can stay as 'advanced mode'."
-                  ),
-                ]
-              ),
-            ]
-          ),
-
-          // Match form
-          h(
-            "div",
-            { className: "match-section" },
-            [
-              h("div", { className: "section-label" }, "Group Match (2 vs 2)"),
-              h("h2", null, "Record Match Result"),
-              h(
-                "p",
-                { className: "muted" },
-                "Pick 2 players per team and choose the winner. Each winner gets +1 point, each loser gets +1 loss."
-              ),
-              h(
-                "form",
-                { onSubmit: submitMatch },
-                [
-                  h(
-                    "div",
-                    { className: "teams-row" },
-                    [
-                      h(
-                        "div",
-                        { className: "team-card" },
-                        [
-                          h("h3", null, "Team 1"),
-                          h("label", { htmlFor: "t1p1" }, "Player 1"),
-                          h(
-                            "select",
-                            {
-                              id: "t1p1",
-                              value: team1.p1,
-                              onChange: (e) =>
-                                setTeam1((t) => ({ ...t, p1: e.target.value })),
-                            },
-                            [
-                              h("option", { value: "" }, "Select"),
-                              ...playerOptions([team1.p2, team2.p1, team2.p2]).map(
-                                (p) =>
-                                  h(
-                                    "option",
-                                    { key: p.id, value: p.id },
-                                    p.name
-                                  )
-                              ),
-                            ]
-                          ),
-                          h("label", { htmlFor: "t1p2" }, "Player 2"),
-                          h(
-                            "select",
-                            {
-                              id: "t1p2",
-                              value: team1.p2,
-                              onChange: (e) =>
-                                setTeam1((t) => ({ ...t, p2: e.target.value })),
-                            },
-                            [
-                              h("option", { value: "" }, "Select"),
-                              ...playerOptions([team1.p1, team2.p1, team2.p2]).map(
-                                (p) =>
-                                  h(
-                                    "option",
-                                    { key: p.id, value: p.id },
-                                    p.name
-                                  )
-                              ),
-                            ]
-                          ),
-                        ]
-                      ),
-                      h(
-                        "div",
-                        { className: "team-card" },
-                        [
-                          h("h3", null, "Team 2"),
-                          h("label", { htmlFor: "t2p1" }, "Player 1"),
-                          h(
-                            "select",
-                            {
-                              id: "t2p1",
-                              value: team2.p1,
-                              onChange: (e) =>
-                                setTeam2((t) => ({ ...t, p1: e.target.value })),
-                            },
-                            [
-                              h("option", { value: "" }, "Select"),
-                              ...playerOptions([team2.p2, team1.p1, team1.p2]).map(
-                                (p) =>
-                                  h(
-                                    "option",
-                                    { key: p.id, value: p.id },
-                                    p.name
-                                  )
-                              ),
-                            ]
-                          ),
-                          h("label", { htmlFor: "t2p2" }, "Player 2"),
-                          h(
-                            "select",
-                            {
-                              id: "t2p2",
-                              value: team2.p2,
-                              onChange: (e) =>
-                                setTeam2((t) => ({ ...t, p2: e.target.value })),
-                            },
-                            [
-                              h("option", { value: "" }, "Select"),
-                              ...playerOptions([team2.p1, team1.p1, team1.p2]).map(
-                                (p) =>
-                                  h(
-                                    "option",
-                                    { key: p.id, value: p.id },
-                                    p.name
-                                  )
-                              ),
-                            ]
-                          ),
-                        ]
-                      ),
-                    ]
-                  ),
-                  h(
-                    "div",
-                    { style: { display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" } },
-                    [
-                      h(
-                        "div",
-                        null,
-                        [
-                          h("label", { htmlFor: "winner-team" }, "Winning team"),
-                          h(
-                            "select",
-                            {
-                              id: "winner-team",
-                              value: winnerTeam,
-                              onChange: (e) => setWinnerTeam(e.target.value),
-                            },
-                            [
-                              h("option", { value: "" }, "Select winner"),
-                              h("option", { value: "1" }, "Team 1"),
-                              h("option", { value: "2" }, "Team 2"),
-                            ]
-                          ),
-                        ]
-                      ),
-                      h(
-                        "button",
-                        { type: "submit", className: "btn btn-primary" },
-                        "Save Match"
-                      ),
-                    ]
-                  ),
-                ]
-              ),
-            ]
-          ),
-
-          // History
-          h(
-            "div",
-            { style: { marginTop: "22px" } },
-            [
-              h("div", { className: "section-label" }, "History"),
-              h(
-                "div",
-                { className: "history-header" },
-                [
-                  h("h2", null, "Match History"),
-                  h(
-                    "div",
-                    { style: { display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" } },
-                    [
-                      h("span", { className: "muted" }, "Filter:"),
-                      h(
-                        "select",
-                        {
-                          value: historyFilter,
-                          onChange: (e) => setHistoryFilter(e.target.value),
-                          id: "history-filter",
-                        },
-                        [
-                          h("option", { value: "all" }, "All"),
-                          h("option", { value: "today" }, "Today"),
-                          h("option", { value: "week" }, "Last 7 days"),
-                        ]
-                      ),
-                      h(
-                        "button",
-                        { className: "btn btn-danger", onClick: clearHistory },
-                        "Clear History"
-                      ),
-                    ]
-                  ),
-                ]
-              ),
-              h(
-                "table",
-                null,
-                [
-                  h(
-                    "thead",
-                    null,
-                    h(
-                      "tr",
-                      null,
-                      [
-                        h("th", null, "#"),
-                        h("th", null, "Team 1"),
-                        h("th", null, "Team 2"),
-                        h("th", null, "Winner"),
-                        h("th", null, "Time"),
-                      ]
-                    )
-                  ),
-                  h(
-                    "tbody",
-                    null,
-                    filteredMatches().length === 0
-                      ? h(
-                          "tr",
-                          null,
-                          h(
-                            "td",
-                            { colSpan: 5, className: "muted" },
-                            "No matches yet."
-                          )
-                        )
-                      : filteredMatches().map((m, idx) => {
-                          const t1Names = (m.team1Ids || [])
-                            .map((id) => getPlayerName(id))
-                            .join(" & ");
-                          const t2Names = (m.team2Ids || [])
-                            .map((id) => getPlayerName(id))
-                            .join(" & ");
-                          const winnerNames =
-                            m.winningTeam === 1 ? t1Names : t2Names;
-                          return h(
-                            "tr",
-                            { key: m.id },
-                            [
-                              h("td", null, idx + 1),
-                              h("td", null, t1Names),
-                              h("td", null, t2Names),
-                              h("td", null, winnerNames),
-                              h("td", null, formatTime(m.time)),
-                            ]
-                          );
-                        })
-                  ),
-                ]
-              ),
-            ]
-          ),
-        ]
-      );
+      await deleteDoc(doc(db, "pendingRequests", id));
     }
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(h(App));
-  </script>
-</body>
-</html>
+    async function rejectRequest(id) {
+      const req = pendingRequests.find((r) => r.id === id);
+      if (!req) return;
+      const ok = confirm("Reject this " + req.type + " request?");
+      if (!ok) return;
+      await deleteDoc(doc(db, "pendingRequests", id));
+    }
+
+    // ---------- options for selects ----------
+    function playerOptions(exclude = []) {
+      return players.filter((p) => !exclude.includes(p.id));
+    }
+
+    // ---------- UI ----------
+    return h(
+      "div",
+      { className: "app-container" },
+      [
+        h("h1", null, "🏸 Badminton Group Tracker (React + Admin)"),
+        h(
+          "div",
+          { className: "subtitle" },
+          "Friends send requests; admin (PIN 2727) approves. Firebase keeps everything in sync."
+        ),
+
+        // Top layout
+        h(
+          "div",
+          { className: "top-layout" },
+          [
+            // LEFT: players & form (friends: request new player)
+            h(
+              "div",
+              null,
+              [
+                h("div", { className: "section-label" }, "Players"),
+                h("h2", null, "Scoreboard"),
+                h(
+                  "form",
+                  { onSubmit: requestNewPlayer, className: "player-form" },
+                  [
+                    h("input", {
+                      type: "text",
+                      placeholder: "Request new player name (e.g. Hanu)",
+                      value: newName,
+                      onChange: (e) => setNewName(e.target.value),
+                    }),
+                    h(
+                      "button",
+                      { type: "submit", className: "btn btn-primary" },
+                      "Request Player"
+                    ),
+                  ]
+                ),
+                h(
+                  "div",
+                  { className: "muted", style: { marginBottom: "6px" } },
+                  "Admin will approve from Pending Requests."
+                ),
+                h(
+                  "table",
+                  null,
+                  [
+                    h(
+                      "thead",
+                      null,
+                      h(
+                        "tr",
+                        null,
+                        [
+                          h("th", null, "#"),
+                          h("th", null, "Player"),
+                          h("th", null, "Points"),
+                          h("th", null, "Losses"),
+                          h("th", null, "Points %"),
+                          h("th", null, "Actions (Admin)"),
+                        ]
+                      )
+                    ),
+                    h(
+                      "tbody",
+                      null,
+                      sortedPlayers.length === 0
+                        ? h(
+                            "tr",
+                            null,
+                            h(
+                              "td",
+                              { colSpan: 6, className: "muted" },
+                              "No players yet. Ask admin to approve some."
+                            )
+                          )
+                        : sortedPlayers.map((p, idx) =>
+                            h(
+                              "tr",
+                              { key: p.id },
+                              [
+                                h("td", null, idx + 1),
+                                h("td", null, p.name),
+                                h("td", null, p.points || 0),
+                                h("td", null, p.losses || 0),
+                                h("td", null, getPointsPct(p)),
+                                h(
+                                  "td",
+                                  { className: "actions" },
+                                  [
+                                    h(
+                                      "button",
+                                      {
+                                        className: "win",
+                                        onClick: () => addPoint(p.id),
+                                      },
+                                      "+Point"
+                                    ),
+                                    h(
+                                      "button",
+                                      {
+                                        className: "loss",
+                                        onClick: () => addLoss(p.id),
+                                      },
+                                      "+Loss"
+                                    ),
+                                    h(
+                                      "button",
+                                      {
+                                        className: "remove",
+                                        onClick: () => removePlayer(p.id),
+                                      },
+                                      "✕"
+                                    ),
+                                  ]
+                                ),
+                              ]
+                            )
+                          )
+                    ),
+                  ]
+                ),
+                h(
+                  "div",
+                  { style: { marginTop: "8px", textAlign: "right" } },
+                  h(
+                    "button",
+                    { className: "btn btn-danger", onClick: resetAll },
+                    "Reset All Points (Admin)"
+                  )
+                ),
+              ]
+            ),
+
+            // RIGHT: quick stats + pending
+            h(
+              "div",
+              { className: "card" },
+              [
+                h("div", { className: "section-label" }, "Admin Overview"),
+                h("h2", null, "Summary"),
+                h(
+                  "p",
+                  { className: "muted" },
+                  `Players: ${players.length} · Matches: ${matches.length}`
+                ),
+                h(
+                  "p",
+                  { className: "muted", style: { marginTop: "4px" } },
+                  `Pending requests: ${pendingRequests.length}`
+                ),
+              ]
+            ),
+          ]
+        ),
+
+        // Match form (friends create pending)
+        h(
+          "div",
+          { className: "match-section" },
+          [
+            h("div", { className: "section-label" }, "Friends – Group Match"),
+            h("h2", null, "Request Match Result (2 vs 2)"),
+            h(
+              "p",
+              { className: "muted" },
+              "Pick 2 players per team and choose the winner. This becomes a pending request; admin approves it."
+            ),
+            h(
+              "form",
+              { onSubmit: requestMatch },
+              [
+                h(
+                  "div",
+                  { className: "teams-row" },
+                  [
+                    h(
+                      "div",
+                      { className: "team-card" },
+                      [
+                        h("h3", null, "Team 1"),
+                        h("label", { htmlFor: "t1p1" }, "Player 1"),
+                        h(
+                          "select",
+                          {
+                            id: "t1p1",
+                            value: team1.p1,
+                            onChange: (e) =>
+                              setTeam1((t) => ({ ...t, p1: e.target.value })),
+                          },
+                          [
+                            h("option", { value: "" }, "Select"),
+                            ...playerOptions([team1.p2, team2.p1, team2.p2]).map(
+                              (p) =>
+                                h(
+                                  "option",
+                                  { key: p.id, value: p.id },
+                                  p.name
+                                )
+                            ),
+                          ]
+                        ),
+                        h("label", { htmlFor: "t1p2" }, "Player 2"),
+                        h(
+                          "select",
+                          {
+                            id: "t1p2",
+                            value: team1.p2,
+                            onChange: (e) =>
+                              setTeam1((t) => ({ ...t, p2: e.target.value })),
+                          },
+                          [
+                            h("option", { value: "" }, "Select"),
+                            ...playerOptions([team1.p1, team2.p1, team2.p2]).map(
+                              (p) =>
+                                h(
+                                  "option",
+                                  { key: p.id, value: p.id },
+                                  p.name
+                                )
+                            ),
+                          ]
+                        ),
+                      ]
+                    ),
+                    h(
+                      "div",
+                      { className: "team-card" },
+                      [
+                        h("h3", null, "Team 2"),
+                        h("label", { htmlFor: "t2p1" }, "Player 1"),
+                        h(
+                          "select",
+                          {
+                            id: "t2p1",
+                            value: team2.p1,
+                            onChange: (e) =>
+                              setTeam2((t) => ({ ...t, p1: e.target.value })),
+                          },
+                          [
+                            h("option", { value: "" }, "Select"),
+                            ...playerOptions([team2.p2, team1.p1, team1.p2]).map(
+                              (p) =>
+                                h(
+                                  "option",
+                                  { key: p.id, value: p.id },
+                                  p.name
+                                )
+                            ),
+                          ]
+                        ),
+                        h("label", { htmlFor: "t2p2" }, "Player 2"),
+                        h(
+                          "select",
+                          {
+                            id: "t2p2",
+                            value: team2.p2,
+                            onChange: (e) =>
+                              setTeam2((t) => ({ ...t, p2: e.target.value })),
+                          },
+                          [
+                            h("option", { value: "" }, "Select"),
+                            ...playerOptions([team2.p1, team1.p1, team1.p2]).map(
+                              (p) =>
+                                h(
+                                  "option",
+                                  { key: p.id, value: p.id },
+                                  p.name
+                                )
+                            ),
+                          ]
+                        ),
+                      ]
+                    ),
+                  ]
+                ),
+                h(
+                  "div",
+                  { style: { display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" } },
+                  [
+                    h(
+                      "div",
+                      null,
+                      [
+                        h("label", { htmlFor: "winner-team" }, "Winning team"),
+                        h(
+                          "select",
+                          {
+                            id: "winner-team",
+                            value: winnerTeam,
+                            onChange: (e) => setWinnerTeam(e.target.value),
+                          },
+                          [
+                            h("option", { value: "" }, "Select winner"),
+                            h("option", { value: "1" }, "Team 1"),
+                            h("option", { value: "2" }, "Team 2"),
+                          ]
+                        ),
+                      ]
+                    ),
+                    h(
+                      "button",
+                      { type: "submit", className: "btn btn-primary" },
+                      "Request Match"
+                    ),
+                  ]
+                ),
+              ]
+            ),
+          ]
+        ),
+
+        // Pending requests (Admin)
+        h(
+          "div",
+          { style: { marginTop: "22px" } },
+          [
+            h("div", { className: "section-label" }, "Admin – Pending"),
+            h("h2", null, "Pending Requests"),
+            h(
+              "table",
+              null,
+              [
+                h(
+                  "thead",
+                  null,
+                  h(
+                    "tr",
+                    null,
+                    [
+                      h("th", null, "#"),
+                      h("th", null, "Type"),
+                      h("th", null, "Details"),
+                      h("th", null, "Submitted"),
+                      h("th", null, "Actions (PIN)"),
+                    ]
+                  )
+                ),
+                h(
+                  "tbody",
+                  null,
+                  pendingRequests.length === 0
+                    ? h(
+                        "tr",
+                        null,
+                        h(
+                          "td",
+                          { colSpan: 5, className: "muted" },
+                          "No pending requests."
+                        )
+                      )
+                    : pendingRequests.map((req, idx) => {
+                        let typeLabel = "";
+                        let details = "";
+                        if (req.type === "player") {
+                          typeLabel = "New Player";
+                          details = `Name: ${req.name}`;
+                        } else if (req.type === "match") {
+                          const t1 = (req.team1Ids || [])
+                            .map((id) => getPlayerName(id))
+                            .join(" & ");
+                          const t2 = (req.team2Ids || [])
+                            .map((id) => getPlayerName(id))
+                            .join(" & ");
+                          const winner =
+                            req.winningTeam === 1 ? "Team 1" : "Team 2";
+                          details = `T1: ${t1} | T2: ${t2} | Winner: ${winner}`;
+                        }
+                        return h(
+                          "tr",
+                          { key: req.id },
+                          [
+                            h("td", null, idx + 1),
+                            h("td", null, typeLabel),
+                            h("td", { style: { textAlign: "left", fontSize: "12px" } }, details),
+                            h("td", null, formatTime(req.createdAt)),
+                            h(
+                              "td",
+                              null,
+                              [
+                                h(
+                                  "button",
+                                  {
+                                    className: "btn btn-primary",
+                                    style: { padding: "4px 10px", marginRight: "4px" },
+                                    onClick: () => approveRequest(req.id),
+                                  },
+                                  "Approve"
+                                ),
+                                h(
+                                  "button",
+                                  {
+                                    className: "btn btn-danger",
+                                    style: { padding: "4px 10px" },
+                                    onClick: () => rejectRequest(req.id),
+                                  },
+                                  "Reject"
+                                ),
+                              ]
+                            ),
+                          ]
+                        );
+                      })
+                ),
+              ]
+            ),
+          ]
+        ),
+
+        // History
+        h(
+          "div",
+          { style: { marginTop: "22px" } },
+          [
+            h("div", { className: "section-label" }, "History"),
+            h(
+              "div",
+              { className: "history-header" },
+              [
+                h("h2", null, "Match History"),
+                h(
+                  "div",
+                  { style: { display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" } },
+                  [
+                    h("span", { className: "muted" }, "Filter:"),
+                    h(
+                      "select",
+                      {
+                        value: historyFilter,
+                        onChange: (e) => setHistoryFilter(e.target.value),
+                        id: "history-filter",
+                      },
+                      [
+                        h("option", { value: "all" }, "All"),
+                        h("option", { value: "today" }, "Today"),
+                        h("option", { value: "week" }, "Last 7 days"),
+                      ]
+                    ),
+                    h(
+                      "button",
+                      { className: "btn btn-danger", onClick: clearHistory },
+                      "Clear History (Admin)"
+                    ),
+                  ]
+                ),
+              ]
+            ),
+            h(
+              "table",
+              null,
+              [
+                h(
+                  "thead",
+                  null,
+                  h(
+                    "tr",
+                    null,
+                    [
+                      h("th", null, "#"),
+                      h("th", null, "Team 1"),
+                      h("th", null, "Team 2"),
+                      h("th", null, "Winner"),
+                      h("th", null, "Time"),
+                    ]
+                  )
+                ),
+                h(
+                  "tbody",
+                  null,
+                  filteredMatches().length === 0
+                    ? h(
+                        "tr",
+                        null,
+                        h(
+                          "td",
+                          { colSpan: 5, className: "muted" },
+                          "No matches yet."
+                        )
+                      )
+                    : filteredMatches().map((m, idx) => {
+                        const t1Names = (m.team1Ids || [])
+                          .map((id) => getPlayerName(id))
+                          .join(" & ");
+                        const t2Names = (m.team2Ids || [])
+                          .map((id) => getPlayerName(id))
+                          .join(" & ");
+                        const winnerNames =
+                          m.winningTeam === 1 ? t1Names : t2Names;
+                        return h(
+                          "tr",
+                          { key: m.id },
+                          [
+                            h("td", null, idx + 1),
+                            h("td", null, t1Names),
+                            h("td", null, t2Names),
+                            h("td", null, winnerNames),
+                            h("td", null, formatTime(m.time)),
+                          ]
+                        );
+                      })
+                ),
+              ]
+            ),
+          ]
+        ),
+      ]
+    );
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(h(App));
+</script>
