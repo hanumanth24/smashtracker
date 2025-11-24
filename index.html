@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Badminton Group Win Tracker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top left, #e0f2fe, #f9fafb 40%, #eef2ff);
+      color: #0f172a;
+    }
+
+    .app-container {
+      max-width: 1200px;
+      margin: 32px auto;
+      padding: 24px 20px 32px;
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow:
+        0 18px 40px rgba(15, 23, 42, 0.12),
+        0 0 0 1px rgba(148, 163, 184, 0.18);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 4px;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #0f172a;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-size: 18px;
+      color: #111827;
+    }
+
+    .section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+
+    .top-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr);
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    /* Add player form */
+    .player-form-card {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #eff6ff, #f9fafb);
+      border: 1px solid #dbeafe;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .player-form {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .player-form input {
+      flex: 1;
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1px solid #cbd5f5;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 13px;
+    }
+
+    .player-form input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px #2563eb33;
+    }
+
+    .player-form button {
+      padding: 9px 14px;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: #f9fafb;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .player-form button:hover {
+      filter: brightness(1.03);
+    }
+
+    .tag-pill {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.08);
+      color: #1d4ed8;
+      border: 1px solid rgba(129, 140, 248, 0.5);
+      white-space: nowrap;
+    }
+
+    /* Tables */
+    .table-card {
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      background: #f9fafb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+
+    .players-table thead,
+    .matches-table thead,
+    .player-matches-table thead {
+      background: #e5e7eb4d;
+    }
+
+    .players-table th,
+    .players-table td,
+    .matches-table th,
+    .matches-table td,
+    .player-matches-table th,
+    .player-matches-table td {
+      padding: 8px 8px;
+      text-align: center;
+      font-size: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .players-table th,
+    .matches-table th,
+    .player-matches-table th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: #6b7280;
+    }
+
+    .players-table tbody tr:nth-child(even),
+    .matches-table tbody tr:nth-child(even),
+    .player-matches-table tbody tr:nth-child(even) {
+      background: #f3f4f6;
+    }
+
+    .players-table tbody tr:nth-child(odd),
+    .matches-table tbody tr:nth-child(odd),
+    .player-matches-table tbody tr:nth-child(odd) {
+      background: #ffffff;
+    }
+
+    /* highlight row for hot streak */
+    .players-table tbody tr.streak-hot {
+      background: #dcfce7 !important;
+    }
+
+    .players-table tbody tr.streak-hot td {
+      border-bottom-color: #bbf7d0;
+    }
+
+    .streak-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #16a34a;
+      color: #ecfdf5;
+      margin-left: 4px;
+    }
+
+    .streak-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #bbf7d0;
+    }
+
+    .actions {
+      white-space: nowrap;
+    }
+
+    .action-buttons {
+      margin-top: 4px;
+    }
+
+    .actions button {
+      margin: 0 2px;
+      padding: 3px 8px;
+      border: none;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .actions .win {
+      background: #22c55e1a;
+      color: #15803d;
+      border: 1px solid #22c55e66;
+    }
+
+    .actions .loss {
+      background: #fb923c1a;
+      color: #c2410c;
+      border: 1px solid #fb923c66;
+    }
+
+    .actions .remove {
+      background: #fecaca;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+
+    .actions button:hover {
+      filter: brightness(1.03);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .danger {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      padding: 7px 13px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .danger:hover {
+      filter: brightness(0.98);
+    }
+
+    .primary-btn {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: #e5f0ff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .primary-btn:hover {
+      filter: brightness(1.03);
+    }
+
+    .muted {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    /* Last 5 results pills */
+    .last-results {
+      min-height: 20px;
+    }
+
+    .result-pill {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      font-size: 11px;
+      line-height: 18px;
+      text-align: center;
+      margin: 0 1px;
+      font-weight: 600;
+    }
+
+    .result-pill.win {
+      background: #bbf7d0;
+      color: #166534;
+    }
+
+    .result-pill.loss {
+      background: #fed7aa;
+      color: #9a3412;
+    }
+
+    .results-legend {
+      margin: 6px 2px 8px;
+    }
+
+    /* Match section */
+    .match-section {
+      margin-top: 26px;
+      padding: 16px 16px 18px;
+      border-radius: 16px;
+      background: radial-gradient(circle at top left, #dbeafe, #eff6ff);
+      border: 1px solid #bfdbfe;
+    }
+
+    .match-header-line {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .match-section h2 {
+      margin-top: 0;
+    }
+
+    .match-section p {
+      font-size: 12px;
+      color: #4b5563;
+      margin-top: 4px;
+      margin-bottom: 10px;
+    }
+
+    .teams-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .team-card {
+      flex: 1;
+      min-width: 230px;
+      padding: 10px 12px 12px;
+      border-radius: 14px;
+      background: #ffffffcc;
+      border: 1px solid #dbeafe;
+    }
+
+    .team-card h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #1f2937;
+    }
+
+    .team-badge {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #2563eb0d;
+      border: 1px solid #93c5fd;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #1d4ed8;
+    }
+
+    .select-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    select {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 10px;
+      border: 1px solid #cbd5f5;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 12px;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px #2563eb33;
+    }
+
+    label {
+      font-size: 11px;
+      margin-bottom: 2px;
+      color: #4b5563;
+    }
+
+    .match-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .match-footer .winner-select {
+      min-width: 200px;
+    }
+
+    .note {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    /* History */
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+      margin-top: 6px;
+    }
+
+    .history-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    #history-filter {
+      padding: 6px 9px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      color: #374151;
+      font-size: 12px;
+    }
+
+    /* Player details panel */
+    .player-details-card {
+      padding: 12px 12px 14px;
+      border-radius: 16px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+    }
+
+    .player-details-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .player-name-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-small {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .player-stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 6px 0 10px;
+      font-size: 11px;
+    }
+
+    .stat-pill {
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+    }
+
+    .player-link {
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin: 0;
+      color: #2563eb;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 12px;
+    }
+
+    .player-link:hover {
+      color: #1d4ed8;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .top-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .player-form {
+        flex-direction: column;
+      }
+
+      .players-table th:nth-child(1),
+      .players-table td:nth-child(1),
+      .matches-table th:nth-child(1),
+      .matches-table td:nth-child(1),
+      .player-matches-table th:nth-child(1),
+      .player-matches-table td:nth-child(1) {
+        display: none; /* hide index on small screens */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <h1>🏸 Badminton Group Tracker</h1>
+    <div class="subtitle">Track 2 vs 2 games, points, streaks, and match history for your group.</div>
+
+    <!-- Top layout: players + player details -->
+    <div class="top-layout">
+      <div>
+        <div class="section-label">Players</div>
+        <div class="player-form-card">
+          <form id="player-form" class="player-form">
+            <input
+              type="text"
+              id="player-name"
+              placeholder="Add player name (e.g. Hanu)"
+              required
+            />
+            <button type="submit">+ Add</button>
+          </form>
+          <span class="tag-pill">Tip: Add everyone once. Use matches to auto-update points.</span>
+        </div>
+
+        <h2>Scoreboard</h2>
+        <div class="table-card">
+          <table class="players-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th>Points</th>
+                <th>Losses</th>
+                <th>Points %</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="players-body">
+              <!-- Rows will be added dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="results-legend muted">
+          Legend: circles show last 5 matches (newest on the left) → 
+          <span class="result-pill win">W</span> Win, 
+          <span class="result-pill loss">L</span> Loss.
+          Rows highlighted in light green indicate a win streak of 3+.
+        </div>
+
+        <div class="controls">
+          <button id="reset-all" class="danger">Reset All Points</button>
+        </div>
+      </div>
+
+      <!-- Player Details Panel -->
+      <div>
+        <div class="section-label">Player Insights</div>
+        <h2>Player Details</h2>
+        <div id="player-details" class="player-details-card">
+          <p class="muted">
+            Click any player name in the scoreboard to see their personal stats and match history.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group Match Section -->
+    <div class="match-section">
+      <div class="match-header-line">
+        <div>
+          <div class="section-label">Matches</div>
+          <h2>Record Group Match (2 vs 2)</h2>
+        </div>
+        <span class="tag-pill">Auto-updates all 4 players</span>
+      </div>
+      <p>
+        Select 2 players per team. Winning team gives
+        <strong>1 point per player</strong> and the other team gets
+        <strong>1 loss per player</strong>. Every match is added to history.
+      </p>
+
+      <form id="match-form">
+        <div class="teams-row">
+          <div class="team-card">
+            <h3>
+              <span class="team-badge">T1</span> Team 1
+            </h3>
+            <div class="select-group">
+              <div>
+                <label for="team1-player1">Player 1</label>
+                <select id="team1-player1" required></select>
+              </div>
+              <div>
+                <label for="team1-player2">Player 2</label>
+                <select id="team1-player2" required></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="team-card">
+            <h3>
+              <span class="team-badge">T2</span> Team 2
+            </h3>
+            <div class="select-group">
+              <div>
+                <label for="team2-player1">Player 1</label>
+                <select id="team2-player1" required></select>
+              </div>
+              <div>
+                <label for="team2-player2">Player 2</label>
+                <select id="team2-player2" required></select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="match-footer">
+          <div class="winner-select">
+            <label for="winning-team">Winning Team</label>
+            <select id="winning-team" required>
+              <option value="">Select winner</option>
+              <option value="1">Team 1</option>
+              <option value="2">Team 2</option>
+            </select>
+          </div>
+
+          <button type="submit" class="primary-btn">Save Match</button>
+          <div class="note">
+            You need at least 4 different players to record a group match.
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Match History -->
+    <div style="margin-top: 20px;">
+      <div class="section-label">History</div>
+      <h2>Match History</h2>
+      <div class="history-header">
+        <span class="muted">Newest match appears at the top.</span>
+        <div class="history-actions">
+          <label for="history-filter" class="muted">Filter:</label>
+          <select id="history-filter">
+            <option value="all">All</option>
+            <option value="today">Today</option>
+            <option value="week">Last 7 days</option>
+          </select>
+          <button id="clear-history" class="danger">Clear History</button>
+        </div>
+      </div>
+      <div class="table-card">
+        <table class="matches-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team 1</th>
+              <th>Team 2</th>
+              <th>Winner</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="matches-body">
+            <!-- Match rows will be added dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // LocalStorage keys
+    const PLAYERS_KEY = "badminton_group_tracker_players_v2";
+    const MATCHES_KEY = "badminton_group_tracker_matches_v1";
+
+    // In-memory store
+    let players = []; // { id, name, points, losses }
+    let matches = []; // { id, time, team1Ids:[], team2Ids:[], winningTeam:1|2 }
+
+    let selectedPlayerId = null;
+    let historyFilter = "all";
+
+    // DOM refs
+    const playerForm = document.getElementById("player-form");
+    const playerNameInput = document.getElementById("player-name");
+    const playersBody = document.getElementById("players-body");
+    const resetAllBtn = document.getElementById("reset-all");
+
+    const matchForm = document.getElementById("match-form");
+    const team1Player1Select = document.getElementById("team1-player1");
+    const team1Player2Select = document.getElementById("team1-player2");
+    const team2Player1Select = document.getElementById("team2-player1");
+    const team2Player2Select = document.getElementById("team2-player2");
+    const winningTeamSelect = document.getElementById("winning-team");
+
+    const matchesBody = document.getElementById("matches-body");
+    const clearHistoryBtn = document.getElementById("clear-history");
+    const historyFilterSelect = document.getElementById("history-filter");
+
+    const playerDetailsEl = document.getElementById("player-details");
+
+    const teamSelects = [
+      team1Player1Select,
+      team1Player2Select,
+      team2Player1Select,
+      team2Player2Select,
+    ];
+
+    // Load from localStorage
+    function loadPlayersFromStorage() {
+      try {
+        const raw = localStorage.getItem(PLAYERS_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          players = parsed;
+        }
+      } catch (e) {
+        console.error("Failed to load players from localStorage", e);
+      }
+    }
+
+    function loadMatchesFromStorage() {
+      try {
+        const raw = localStorage.getItem(MATCHES_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          matches = parsed;
+        }
+      } catch (e) {
+        console.error("Failed to load matches from localStorage", e);
+      }
+    }
+
+    // Save to localStorage
+    function savePlayersToStorage() {
+      try {
+        localStorage.setItem(PLAYERS_KEY, JSON.stringify(players));
+      } catch (e) {
+        console.error("Failed to save players", e);
+      }
+    }
+
+    function saveMatchesToStorage() {
+      try {
+        localStorage.setItem(MATCHES_KEY, JSON.stringify(matches));
+      } catch (e) {
+        console.error("Failed to save matches", e);
+      }
+    }
+
+    // Helper: get player name by id
+    function getPlayerNameById(id) {
+      const player = players.find((p) => p.id === id);
+      return player ? player.name : "Unknown";
+    }
+
+    // Helper: fill all select dropdowns with current players
+    function populatePlayerOptions() {
+      // Find which players are already selected in other selects
+      const selectedIds = new Map();
+      teamSelects.forEach((s) => {
+        if (s.value) {
+          selectedIds.set(s, Number(s.value));
+        }
+      });
+
+      teamSelects.forEach((select) => {
+        const currentValue = select.value ? Number(select.value) : null;
+
+        // Collect IDs selected in *other* selects
+        const blockedIds = new Set(
+          Array.from(selectedIds.entries())
+            .filter(([s]) => s !== select)
+            .map(([, id]) => id)
+        );
+
+        select.innerHTML = ""; // clear
+
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Select player";
+        select.appendChild(placeholder);
+
+        players.forEach((p) => {
+          if (blockedIds.has(p.id) && p.id !== currentValue) {
+            return; // don't show players already chosen elsewhere
+          }
+          const option = document.createElement("option");
+          option.value = String(p.id);
+          option.textContent = p.name;
+          select.appendChild(option);
+        });
+
+        // restore previous value when possible
+        if (
+          currentValue !== null &&
+          Array.from(select.options).some(
+            (opt) => Number(opt.value) === currentValue
+          )
+        ) {
+          select.value = String(currentValue);
+        }
+      });
+    }
+
+    // Add player
+    playerForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = playerNameInput.value.trim();
+      if (!name) return;
+
+      const newPlayer = {
+        id: Date.now(),
+        name,
+        points: 0,
+        losses: 0,
+      };
+
+      players.push(newPlayer);
+      playerNameInput.value = "";
+      renderEverything();
+    });
+
+    // Update points/losses manually from table buttons
+    function updatePlayer(id, type) {
+      players = players.map((p) => {
+        if (p.id === id) {
+          if (type === "point") p.points += 1;
+          if (type === "loss") p.losses += 1;
+        }
+        return p;
+      });
+
+      renderEverything();
+    }
+
+    // Remove player
+    function removePlayer(id) {
+      players = players.filter((p) => p.id !== id);
+      if (selectedPlayerId === id) {
+        selectedPlayerId = null;
+      }
+      renderEverything();
+    }
+
+    // Calculate points percentage
+    function getPointsPercentage(player) {
+      const totalGames = player.points + player.losses;
+      if (totalGames === 0) return "0%";
+      const pct = (player.points / totalGames) * 100;
+      return pct.toFixed(1) + "%";
+    }
+
+    // Get last up to 5 results for a player, newest first: ['W', 'L', ...]
+    function getLastResultsForPlayer(playerId, limit = 5) {
+      const results = [];
+      for (const match of matches) {
+        if (
+          match.team1Ids.includes(playerId) ||
+          match.team2Ids.includes(playerId)
+        ) {
+          const isTeam1 = match.team1Ids.includes(playerId);
+          const win =
+            (isTeam1 && match.winningTeam === 1) ||
+            (!isTeam1 && match.winningTeam === 2);
+          results.push(win ? "W" : "L");
+          if (results.length >= limit) break;
+        }
+      }
+      return results;
+    }
+
+    // Compute current win streak (consecutive W from newest going back)
+    function getCurrentWinStreak(playerId) {
+      let streak = 0;
+      for (const match of matches) {
+        if (
+          match.team1Ids.includes(playerId) ||
+          match.team2Ids.includes(playerId)
+        ) {
+          const isTeam1 = match.team1Ids.includes(playerId);
+          const win =
+            (isTeam1 && match.winningTeam === 1) ||
+            (!isTeam1 && match.winningTeam === 2);
+          if (win) {
+            streak += 1;
+          } else {
+            break;
+          }
+        }
+      }
+      return streak;
+    }
+
+    // Reset all stats
+    resetAllBtn.addEventListener("click", () => {
+      if (!players.length) return;
+      const confirmReset = confirm(
+        "Are you sure you want to reset all players' points/losses? Match history will stay."
+      );
+      if (!confirmReset) return;
+
+      players = players.map((p) => ({ ...p, points: 0, losses: 0 }));
+      renderEverything();
+    });
+
+    // Clear match history
+    clearHistoryBtn.addEventListener("click", () => {
+      if (!matches.length) return;
+      const confirmClear = confirm(
+        "Are you sure you want to clear all match history?"
+      );
+      if (!confirmClear) return;
+      matches = [];
+      renderEverything();
+    });
+
+    // Record group match (2 vs 2)
+    matchForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      if (players.length < 4) {
+        alert("You need at least 4 players to record a 2 vs 2 match.");
+        return;
+      }
+
+      const t1p1 = team1Player1Select.value;
+      const t1p2 = team1Player2Select.value;
+      const t2p1 = team2Player1Select.value;
+      const t2p2 = team2Player2Select.value;
+      const winningTeam = winningTeamSelect.value;
+
+      if (!t1p1 || !t1p2 || !t2p1 || !t2p2 || !winningTeam) {
+        alert("Please select all 4 players and the winning team.");
+        return;
+      }
+
+      const ids = [t1p1, t1p2, t2p1, t2p2];
+      const uniqueIds = new Set(ids);
+      if (uniqueIds.size !== 4) {
+        alert("Each position must have a different player (no duplicates).");
+        return;
+      }
+
+      const team1Ids = [t1p1, t1p2].map((id) => Number(id));
+      const team2Ids = [t2p1, t2p2].map((id) => Number(id));
+
+      let winningIds, losingIds;
+      if (winningTeam === "1") {
+        winningIds = team1Ids;
+        losingIds = team2Ids;
+      } else {
+        winningIds = team2Ids;
+        losingIds = team1Ids;
+      }
+
+      // Update players: +1 point for each winner, +1 loss for each loser
+      players = players.map((p) => {
+        if (winningIds.includes(p.id)) {
+          return { ...p, points: p.points + 1 };
+        }
+        if (losingIds.includes(p.id)) {
+          return { ...p, losses: p.losses + 1 };
+        }
+        return p;
+      });
+
+      // Save match into history (newest first)
+      const match = {
+        id: Date.now(),
+        time: new Date().toISOString(),
+        team1Ids,
+        team2Ids,
+        winningTeam: Number(winningTeam),
+      };
+      matches.unshift(match);
+
+      // Reset match selections
+      team1Player1Select.value = "";
+      team1Player2Select.value = "";
+      team2Player1Select.value = "";
+      team2Player2Select.value = "";
+      winningTeamSelect.value = "";
+
+      renderEverything();
+    });
+
+    // Render players table
+    function renderPlayersTable() {
+      // Sort players by points (desc) then name
+      const sorted = [...players].sort((a, b) => {
+        if (b.points === a.points) {
+          return a.name.localeCompare(b.name);
+        }
+        return b.points - a.points;
+      });
+
+      playersBody.innerHTML = "";
+
+      sorted.forEach((player, index) => {
+        const lastResults = getLastResultsForPlayer(player.id, 5);
+        const streak = getCurrentWinStreak(player.id);
+
+        const tr = document.createElement("tr");
+        if (streak >= 3) {
+          tr.classList.add("streak-hot");
+        }
+
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>
+            <button class="player-link" data-player-id="${player.id}">
+              ${player.name}
+            </button>
+            ${
+              streak >= 3
+                ? `<span class="streak-chip"><span class="streak-dot"></span>${streak}W streak</span>`
+                : ""
+            }
+          </td>
+          <td>${player.points}</td>
+          <td>${player.losses}</td>
+          <td>${getPointsPercentage(player)}</td>
+          <td class="actions">
+            <div class="last-results">
+              ${lastResults
+                .map(
+                  (r) =>
+                    `<span class="result-pill ${
+                      r === "W" ? "win" : "loss"
+                    }">${r}</span>`
+                )
+                .join("")}
+            </div>
+            <div class="action-buttons">
+              <button class="win">+ Point</button>
+              <button class="loss">+ Loss</button>
+              <button class="remove">✕</button>
+            </div>
+          </td>
+        `;
+
+        const pointBtn = tr.querySelector(".win");
+        const lossBtn = tr.querySelector(".loss");
+        const removeBtn = tr.querySelector(".remove");
+        const nameBtn = tr.querySelector(".player-link");
+
+        pointBtn.addEventListener("click", () =>
+          updatePlayer(player.id, "point")
+        );
+        lossBtn.addEventListener("click", () =>
+          updatePlayer(player.id, "loss")
+        );
+        removeBtn.addEventListener("click", () => removePlayer(player.id));
+        nameBtn.addEventListener("click", () => showPlayerDetails(player.id));
+
+        playersBody.appendChild(tr);
+      });
+    }
+
+    // History filter helpers
+    function filterMatchesByHistoryFilter() {
+      const now = new Date();
+      return matches.filter((match) => {
+        if (historyFilter === "all") return true;
+
+        const d = new Date(match.time);
+        if (Number.isNaN(d.getTime())) return true;
+
+        if (historyFilter === "today") {
+          return d.toDateString() === now.toDateString();
+        }
+
+        if (historyFilter === "week") {
+          const diffMs = now - d;
+          return diffMs >= 0 && diffMs <= 7 * 24 * 60 * 60 * 1000;
+        }
+
+        return true;
+      });
+    }
+
+    historyFilterSelect.addEventListener("change", () => {
+      historyFilter = historyFilterSelect.value;
+      renderMatchHistory();
+    });
+
+    // Render match history
+    function formatTime(isoStr) {
+      try {
+        const d = new Date(isoStr);
+        return (
+          d.toLocaleDateString() +
+          " " +
+          d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        );
+      } catch {
+        return isoStr;
+      }
+    }
+
+    function renderMatchHistory() {
+      matchesBody.innerHTML = "";
+
+      const filtered = filterMatchesByHistoryFilter();
+
+      if (!filtered.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          '<td colspan="5" class="muted">No matches for this filter.</td>';
+        matchesBody.appendChild(tr);
+        return;
+      }
+
+      filtered.forEach((match, index) => {
+        const team1Names = match.team1Ids
+          .map((id) => getPlayerNameById(id))
+          .join(" & ");
+        const team2Names = match.team2Ids
+          .map((id) => getPlayerNameById(id))
+          .join(" & ");
+
+        const winnerNames =
+          match.winningTeam === 1 ? team1Names : team2Names;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${team1Names}</td>
+          <td>${team2Names}</td>
+          <td>${winnerNames}</td>
+          <td>${formatTime(match.time)}</td>
+        `;
+        matchesBody.appendChild(tr);
+      });
+    }
+
+    // Player details panel
+    function showPlayerDetails(playerId) {
+      selectedPlayerId = playerId;
+      const player = players.find((p) => p.id === playerId);
+
+      if (!player) {
+        playerDetailsEl.innerHTML =
+          "<p class='muted'>Player not found. Maybe they were removed.</p>";
+        return;
+      }
+
+      // Matches with this player
+      const playerMatches = matches.filter(
+        (m) => m.team1Ids.includes(playerId) || m.team2Ids.includes(playerId)
+      );
+
+      const wins = playerMatches.filter((m) => {
+        const isTeam1 = m.team1Ids.includes(playerId);
+        const isWinnerTeam1 = m.winningTeam === 1;
+        return (isTeam1 && isWinnerTeam1) || (!isTeam1 && m.winningTeam === 2);
+      }).length;
+
+      const total = playerMatches.length;
+      const losses = total - wins;
+      const pct = total === 0 ? "0%" : ((wins / total) * 100).toFixed(1) + "%";
+
+      const partnerAndOppRows = playerMatches
+        .map((m, idx) => {
+          const isTeam1 = m.team1Ids.includes(playerId);
+          const myTeamIds = isTeam1 ? m.team1Ids : m.team2Ids;
+          const oppTeamIds = isTeam1 ? m.team2Ids : m.team1Ids;
+          const myPartnerId = myTeamIds.find((id) => id !== playerId);
+          const myPartnerName = myPartnerId
+            ? getPlayerNameById(myPartnerId)
+            : "-";
+          const oppNames = oppTeamIds.map((id) => getPlayerNameById(id)).join(" & ");
+          const isWin = (isTeam1 && m.winningTeam === 1) ||
+                        (!isTeam1 && m.winningTeam === 2);
+          const result = isWin ? "Win" : "Loss";
+          const time = formatTime(m.time);
+
+          return `
+            <tr>
+              <td>${idx + 1}</td>
+              <td>${myPartnerName}</td>
+              <td>${oppNames}</td>
+              <td>${result}</td>
+              <td>${time}</td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      playerDetailsEl.innerHTML = `
+        <div class="player-details-header">
+          <div class="player-name-title">
+            ${player.name}
+            <span class="badge-small">Profile</span>
+          </div>
+          <button class="danger" id="clear-player-selection">Clear</button>
+        </div>
+        <div class="player-stats-row">
+          <div class="stat-pill">Total matches: ${total}</div>
+          <div class="stat-pill">Wins: ${wins}</div>
+          <div class="stat-pill">Losses: ${losses}</div>
+          <div class="stat-pill">Win %: ${pct}</div>
+          <div class="stat-pill">Points: ${player.points}</div>
+        </div>
+        ${
+          total === 0
+            ? "<p class='muted'>No matches recorded yet for this player.</p>"
+            : `
+          <p class="muted">Matches for ${player.name} (partner / opponents / result):</p>
+          <div class="table-card" style="margin-top:4px;">
+            <table class="player-matches-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Partner</th>
+                  <th>Opponents</th>
+                  <th>Result</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${partnerAndOppRows}
+              </tbody>
+            </table>
+          </div>
+        `
+        }
+      `;
+
+      const clearBtn = document.getElementById("clear-player-selection");
+      clearBtn.addEventListener("click", () => {
+        selectedPlayerId = null;
+        playerDetailsEl.innerHTML = `
+          <p class="muted">
+            Click any player name in the scoreboard to see their personal stats and match history.
+          </p>
+        `;
+      });
+    }
+
+    // Render everything + save
+    function renderEverything() {
+      renderPlayersTable();
+      renderMatchHistory();
+      populatePlayerOptions();
+      savePlayersToStorage();
+      saveMatchesToStorage();
+
+      if (selectedPlayerId !== null) {
+        showPlayerDetails(selectedPlayerId);
+      }
+    }
+
+    // Attach change listeners so options update when one is picked
+    teamSelects.forEach((select) => {
+      select.addEventListener("change", populatePlayerOptions);
+    });
+
+    // Initial load
+    loadPlayersFromStorage();
+    loadMatchesFromStorage();
+    renderEverything();
+  </script>
+</body>
+</html>
