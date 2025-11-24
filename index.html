@@ -2,15 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- IMPORTANT for mobile responsiveness -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Badminton Tracker – React + Firebase</title>
-
-  <!-- Hint browser to connect to CDNs faster -->
-  <link rel="preconnect" href="https://unpkg.com">
-  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-  <link rel="dns-prefetch" href="https://unpkg.com">
-  <link rel="dns-prefetch" href="https://www.gstatic.com">
-
   <style>
     * {
       box-sizing: border-box;
@@ -42,8 +36,7 @@
       border-radius: 24px;
       box-shadow:
         0 0 0 1px rgba(148, 163, 184, 0.35),
-        0 24px 80px rgba(0, 0, 0, 0.9),
-        0 0 60px rgba(255, 122, 0, 0.4);
+        0 18px 50px rgba(0, 0, 0, 0.85);
       position: relative;
       overflow: hidden;
     }
@@ -121,10 +114,9 @@
       background: radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(3, 7, 18, 0.98));
       padding: 12px 14px 14px;
       box-shadow:
-        0 18px 40px rgba(0, 0, 0, 0.9),
-        0 0 30px rgba(255, 122, 0, 0.28);
+        0 16px 38px rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(16px);
-      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
       position: relative;
       overflow: hidden;
     }
@@ -139,7 +131,7 @@
         radial-gradient(circle at top left, rgba(255, 122, 0, 0.12), transparent 55%),
         radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.08), transparent 55%);
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.25s ease;
       pointer-events: none;
       z-index: -1;
     }
@@ -147,11 +139,10 @@
     .card:hover,
     .match-section:hover,
     .team-card:hover {
-      transform: translateY(-4px) scale(1.01);
+      transform: translateY(-3px);
       border-color: rgba(255, 122, 0, 0.8);
       box-shadow:
-        0 22px 60px rgba(0, 0, 0, 0.95),
-        0 0 45px rgba(255, 122, 0, 0.8);
+        0 20px 50px rgba(0, 0, 0, 0.95);
     }
 
     .card:hover::before,
@@ -205,7 +196,7 @@
       font-weight: 600;
       box-shadow:
         0 0 0 1px rgba(248, 250, 252, 0.1),
-        0 0 18px rgba(255, 122, 0, 0.8);
+        0 0 16px rgba(255, 122, 0, 0.75);
       transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     }
 
@@ -232,15 +223,14 @@
       transform: translateY(-1px);
       filter: brightness(1.05);
       box-shadow:
-        0 0 24px rgba(255, 122, 0, 1),
-        0 0 4px rgba(248, 250, 252, 0.4);
+        0 0 20px rgba(255, 122, 0, 0.9);
     }
 
     .btn-danger {
       background: rgba(127, 29, 29, 0.85);
       color: #fecaca;
       border: 1px solid rgba(248, 113, 113, 0.6);
-      box-shadow: 0 0 16px rgba(127, 29, 29, 0.6);
+      box-shadow: 0 0 12px rgba(127, 29, 29, 0.6);
     }
 
     .btn-danger:hover {
@@ -254,8 +244,7 @@
       border: 1px solid rgba(55, 65, 81, 0.9);
       background: radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(3, 7, 18, 0.98));
       box-shadow:
-        inset 0 0 0 1px rgba(15, 23, 42, 1),
-        0 0 22px rgba(15, 23, 42, 0.9);
+        inset 0 0 0 1px rgba(15, 23, 42, 1);
     }
 
     table {
@@ -317,21 +306,21 @@
       background: rgba(22, 163, 74, 0.18);
       color: #bbf7d0;
       border: 1px solid rgba(34, 197, 94, 0.5);
-      box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
     }
 
     .actions .loss {
       background: rgba(234, 88, 12, 0.18);
       color: #fed7aa;
       border: 1px solid rgba(249, 115, 22, 0.6);
-      box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+      box-shadow: 0 0 8px rgba(249, 115, 22, 0.4);
     }
 
     .actions .remove {
       background: rgba(127, 29, 29, 0.9);
       color: #fee2e2;
       border: 1px solid rgba(248, 113, 113, 0.6);
-      box-shadow: 0 0 10px rgba(185, 28, 28, 0.7);
+      box-shadow: 0 0 8px rgba(185, 28, 28, 0.5);
     }
 
     .match-section {
@@ -430,8 +419,8 @@
       background: rgba(10, 10, 15, 0.96);
       border: 1px solid rgba(255, 122, 0, 0.85);
       box-shadow:
-        0 0 26px rgba(255, 122, 0, 0.9),
-        0 0 4px rgba(255, 255, 255, 0.3);
+        0 0 20px rgba(255, 122, 0, 0.8),
+        0 0 3px rgba(255, 255, 255, 0.25);
       color: #fefce8;
       display: flex;
       align-items: center;
@@ -457,7 +446,7 @@
       font-size: 11px;
       background: rgba(255, 122, 0, 0.15);
       border: 1px solid rgba(255, 122, 0, 0.8);
-      box-shadow: 0 0 12px rgba(255, 122, 0, 0.7);
+      box-shadow: 0 0 10px rgba(255, 122, 0, 0.6);
     }
 
     .notification-4d-close {
@@ -479,35 +468,35 @@
 
     .notif-success {
       border-color: rgba(34, 197, 94, 0.9);
-      box-shadow: 0 0 26px rgba(34, 197, 94, 0.8);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.75);
     }
 
     .notif-success .notification-4d-icon {
       background: rgba(22, 163, 74, 0.2);
       border-color: rgba(34, 197, 94, 0.9);
-      box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.85);
     }
 
     .notif-error {
       border-color: rgba(248, 113, 113, 0.9);
-      box-shadow: 0 0 26px rgba(248, 113, 113, 0.9);
+      box-shadow: 0 0 20px rgba(248, 113, 113, 0.9);
     }
 
     .notif-error .notification-4d-icon {
       background: rgba(185, 28, 28, 0.25);
       border-color: rgba(248, 113, 113, 0.9);
-      box-shadow: 0 0 12px rgba(248, 113, 113, 0.9);
+      box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
     }
 
     .notif-info {
       border-color: rgba(59, 130, 246, 0.85);
-      box-shadow: 0 0 26px rgba(59, 130, 246, 0.9);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.9);
     }
 
     .notif-info .notification-4d-icon {
       background: rgba(37, 99, 235, 0.25);
       border-color: rgba(59, 130, 246, 0.85);
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.9);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.9);
     }
 
     @keyframes notifPop {
@@ -523,6 +512,87 @@
         transform: translateX(-50%) translateY(0) scale(1);
         opacity: 1;
       }
+    }
+
+    /* Admin PIN modal */
+    .pin-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+    }
+
+    .pin-modal {
+      width: 100%;
+      max-width: 320px;
+      padding: 16px 16px 14px;
+      border-radius: 18px;
+      background: radial-gradient(circle at top, #020617, #020617 60%, #020617);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.95),
+        0 0 28px rgba(59, 130, 246, 0.8);
+    }
+
+    .pin-modal-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .pin-modal-sub {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 12px;
+    }
+
+    .pin-input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.98);
+      color: #e5e7eb;
+      outline: none;
+      font-size: 14px;
+      letter-spacing: 0.3em;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .pin-input:focus {
+      border-color: var(--neon-orange);
+      box-shadow: 0 0 0 1px rgba(255, 122, 0, 0.65);
+    }
+
+    .pin-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .pin-btn {
+      border-radius: 999px;
+      border: none;
+      padding: 6px 14px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .pin-btn-cancel {
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      border: 1px solid rgba(75, 85, 99, 0.9);
+    }
+
+    .pin-btn-ok {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #f9fafb;
+      border: none;
+      box-shadow: 0 0 14px rgba(34, 197, 94, 0.8);
     }
 
     @media (max-width: 900px) {
@@ -604,12 +674,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Create Firestore query refs ONCE (better performance)
-    const playersRef = db.collection("players").orderBy("createdAt", "asc");
-    const matchesRef = db.collection("matches").orderBy("time", "desc");
-    const pendingRef = db.collection("pendingRequests").orderBy("createdAt", "desc");
-
-    const { useState, useEffect, useMemo, createElement: h } = React;
+    const { useState, useEffect, useMemo, useRef, createElement: h } = React;
     const ADMIN_PIN = "2727";
 
     // ---------- Hook for Firestore collections ----------
@@ -655,6 +720,10 @@
 
     // ---------- App ----------
     function App() {
+      const playersRef = db.collection("players").orderBy("createdAt", "asc");
+      const matchesRef = db.collection("matches").orderBy("time", "desc");
+      const pendingRef = db.collection("pendingRequests").orderBy("createdAt", "desc");
+
       const players = useCollectionRef(playersRef);
       const matches = useCollectionRef(matchesRef);
       const pendingRequests = useCollectionRef(pendingRef);
@@ -667,6 +736,14 @@
       const [winnerTeam, setWinnerTeam] = useState("");
 
       const [notifications, setNotifications] = useState([]);
+
+      // Admin PIN modal state
+      const [adminPrompt, setAdminPrompt] = useState({
+        open: false,
+        actionLabel: "",
+        pin: ""
+      });
+      const adminActionRef = useRef(null);
 
       function showNotification(message, type = "info", duration = 3000) {
         const id = Date.now().toString() + Math.random().toString(16).slice(2);
@@ -682,12 +759,33 @@
         setNotifications((prev) => prev.filter((n) => n.id !== id));
       }
 
-      function askAdmin(action) {
-        const entered = prompt("Admin PIN required to " + action + ". Enter PIN:");
-        if (entered === null) return false;
-        if (entered === ADMIN_PIN) return true;
-        showNotification("Wrong PIN", "error");
-        return false;
+      // Open admin PIN modal with a callback
+      function requireAdminPin(actionLabel, callback) {
+        adminActionRef.current = callback;
+        setAdminPrompt({ open: true, actionLabel, pin: "" });
+      }
+
+      function closeAdminModal() {
+        adminActionRef.current = null;
+        setAdminPrompt((prev) => ({ ...prev, open: false, pin: "" }));
+      }
+
+      async function handleAdminPinSubmit(e) {
+        e.preventDefault();
+        if (adminPrompt.pin !== ADMIN_PIN) {
+          showNotification("Wrong PIN", "error");
+          return;
+        }
+        const fn = adminActionRef.current;
+        closeAdminModal();
+        if (typeof fn === "function") {
+          try {
+            await fn();
+          } catch (err) {
+            console.error(err);
+            showNotification("Admin action failed.", "error");
+          }
+        }
       }
 
       const playerMap = useMemo(() => {
@@ -798,90 +896,69 @@
         }
       }
 
-      // ---------- ADMIN ACTIONS ----------
-      async function addPoint(id) {
-        if (!askAdmin("add a point")) return;
-        try {
+      // ---------- ADMIN ACTIONS (all use requireAdminPin) ----------
+      function addPoint(id) {
+        requireAdminPin("add a point", async () => {
           await db.collection("players").doc(id).update({
             points: firebase.firestore.FieldValue.increment(1),
           });
           showNotification("Point added.", "success");
-        } catch (err) {
-          console.error(err);
-          showNotification("Failed to update points.", "error");
-        }
+        });
       }
 
-      async function addLoss(id) {
-        if (!askAdmin("add a loss")) return;
-        try {
+      function addLoss(id) {
+        requireAdminPin("add a loss", async () => {
           await db.collection("players").doc(id).update({
             losses: firebase.firestore.FieldValue.increment(1),
           });
           showNotification("Loss added.", "info");
-        } catch (err) {
-          console.error(err);
-          showNotification("Failed to update losses.", "error");
-        }
+        });
       }
 
-      async function removePlayer(id) {
-        if (!askAdmin("remove this player")) return;
-        const ok = confirm("Remove this player?");
-        if (!ok) return;
-        try {
+      function removePlayer(id) {
+        requireAdminPin("remove this player", async () => {
+          const ok = confirm("Remove this player?");
+          if (!ok) return;
           await db.collection("players").doc(id).delete();
           showNotification("Player removed.", "success");
-        } catch (err) {
-          console.error(err);
-          showNotification("Failed to remove player.", "error");
-        }
+        });
       }
 
-      async function resetAll() {
+      function resetAll() {
         if (!players.length) return;
-        if (!askAdmin("reset all points & losses")) return;
-        const ok = confirm("Reset all points and losses?");
-        if (!ok) return;
-        try {
+        requireAdminPin("reset all points & losses", async () => {
+          const ok = confirm("Reset all points and losses?");
+          if (!ok) return;
           const batch = db.batch();
           players.forEach((p) => {
             batch.update(db.collection("players").doc(p.id), { points: 0, losses: 0 });
           });
           await batch.commit();
           showNotification("All points and losses reset.", "info");
-        } catch (err) {
-          console.error(err);
-          showNotification("Failed to reset scores.", "error");
-        }
+        });
       }
 
-      async function clearHistory() {
+      function clearHistory() {
         if (!matches.length) return;
-        if (!askAdmin("clear ALL match history")) return;
-        const ok = confirm("Clear ALL match history?");
-        if (!ok) return;
-        try {
+        requireAdminPin("clear ALL match history", async () => {
+          const ok = confirm("Clear ALL match history?");
+          if (!ok) return;
           const batch = db.batch();
           matches.forEach((m) => {
             batch.delete(db.collection("matches").doc(m.id));
           });
           await batch.commit();
           showNotification("Match history cleared.", "info");
-        } catch (err) {
-          console.error(err);
-          showNotification("Failed to clear history.", "error");
-        }
+        });
       }
 
-      async function approveRequest(id) {
+      function approveRequest(id) {
         const req = pendingRequests.find((r) => r.id === id);
         if (!req) return;
-        if (!askAdmin("approve this " + req.type + " request")) return;
 
-        const reqDocRef = db.collection("pendingRequests").doc(id);
+        requireAdminPin("approve this " + req.type + " request", async () => {
+          const reqDocRef = db.collection("pendingRequests").doc(id);
 
-        try {
           if (req.type === "player") {
             const name = (req.name || "").trim();
             if (name) {
@@ -926,10 +1003,7 @@
 
           await reqDocRef.delete();
           showNotification("Request approved.", "success");
-        } catch (err) {
-          console.error(err);
-          showNotification("Failed to approve request.", "error");
-        }
+        });
       }
 
       async function rejectRequest(id) {
@@ -1481,6 +1555,54 @@
               ),
             ]
           ),
+
+          // Admin PIN modal
+          adminPrompt.open &&
+            h(
+              "div",
+              { className: "pin-backdrop" },
+              h(
+                "form",
+                { className: "pin-modal", onSubmit: handleAdminPinSubmit },
+                [
+                  h("div", { className: "pin-modal-title" }, "Admin PIN"),
+                  h(
+                    "div",
+                    { className: "pin-modal-sub" },
+                    "Enter PIN to " + adminPrompt.actionLabel + "."
+                  ),
+                  h("input", {
+                    className: "pin-input",
+                    type: "password",
+                    maxLength: 6,
+                    autoFocus: true,
+                    value: adminPrompt.pin,
+                    onChange: (e) =>
+                      setAdminPrompt((prev) => ({ ...prev, pin: e.target.value })),
+                  }),
+                  h(
+                    "div",
+                    { className: "pin-modal-actions" },
+                    [
+                      h(
+                        "button",
+                        {
+                          type: "button",
+                          className: "pin-btn pin-btn-cancel",
+                          onClick: closeAdminModal,
+                        },
+                        "Cancel"
+                      ),
+                      h(
+                        "button",
+                        { type: "submit", className: "pin-btn pin-btn-ok" },
+                        "Confirm"
+                      ),
+                    ]
+                  ),
+                ]
+              )
+            ),
 
           // 4D bottom notifications
           h(
