@@ -66,7 +66,7 @@
       align-items: flex-start;
     }
 
-    /* Add player form */
+    /* Add player request form */
     .player-form-card {
       padding: 12px 14px;
       border-radius: 14px;
@@ -143,7 +143,8 @@
 
     .players-table thead,
     .matches-table thead,
-    .player-matches-table thead {
+    .player-matches-table thead,
+    .pending-table thead {
       background: #e5e7eb4d;
     }
 
@@ -152,7 +153,9 @@
     .matches-table th,
     .matches-table td,
     .player-matches-table th,
-    .player-matches-table td {
+    .player-matches-table td,
+    .pending-table th,
+    .pending-table td {
       padding: 8px 8px;
       text-align: center;
       font-size: 12px;
@@ -161,7 +164,8 @@
 
     .players-table th,
     .matches-table th,
-    .player-matches-table th {
+    .player-matches-table th,
+    .pending-table th {
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.09em;
@@ -170,13 +174,15 @@
 
     .players-table tbody tr:nth-child(even),
     .matches-table tbody tr:nth-child(even),
-    .player-matches-table tbody tr:nth-child(even) {
+    .player-matches-table tbody tr:nth-child(even),
+    .pending-table tbody tr:nth-child(even) {
       background: #f3f4f6;
     }
 
     .players-table tbody tr:nth-child(odd),
     .matches-table tbody tr:nth-child(odd),
-    .player-matches-table tbody tr:nth-child(odd) {
+    .player-matches-table tbody tr:nth-child(odd),
+    .pending-table tbody tr:nth-child(odd) {
       background: #ffffff;
     }
 
@@ -522,6 +528,42 @@
       color: #1d4ed8;
     }
 
+    /* Pending requests */
+    .pending-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #facc15;
+    }
+
+    .pending-actions button {
+      margin: 0 2px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: none;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .approve-btn {
+      background: #bbf7d0;
+      color: #166534;
+      border: 1px solid #22c55e;
+    }
+
+    .reject-btn {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    .approve-btn:hover,
+    .reject-btn:hover {
+      filter: brightness(1.03);
+    }
+
     /* Responsive */
     @media (max-width: 900px) {
       .top-layout {
@@ -539,7 +581,9 @@
       .matches-table th:nth-child(1),
       .matches-table td:nth-child(1),
       .player-matches-table th:nth-child(1),
-      .player-matches-table td:nth-child(1) {
+      .player-matches-table td:nth-child(1),
+      .pending-table th:nth-child(1),
+      .pending-table td:nth-child(1) {
         display: none; /* hide index on small screens */
       }
     }
@@ -548,26 +592,29 @@
 <body>
   <div class="app-container">
     <h1>🏸 Badminton Group Tracker</h1>
-    <div class="subtitle">Track 2 vs 2 games, points, streaks, and match history for your group.</div>
+    <div class="subtitle">
+      Friends can submit requests. Only admin (with PIN) can approve and update scores.
+    </div>
 
     <!-- Top layout: players + player details -->
     <div class="top-layout">
       <div>
-        <div class="section-label">Players</div>
+        <div class="section-label">Friends – Requests</div>
         <div class="player-form-card">
           <form id="player-form" class="player-form">
             <input
               type="text"
               id="player-name"
-              placeholder="Add player name (e.g. Hanu)"
+              placeholder="Request new player name (e.g. Hanu)"
               required
             />
-            <button type="submit">+ Add</button>
+            <button type="submit">Request Player</button>
           </form>
-          <span class="tag-pill">Tip: Add everyone once. Use matches to auto-update points.</span>
+          <span class="tag-pill">Admin will approve the player from Pending Requests.</span>
         </div>
 
-        <h2>Scoreboard</h2>
+        <div class="section-label">Scoreboard</div>
+        <h2>Players & Points</h2>
         <div class="table-card">
           <table class="players-table">
             <thead>
@@ -577,7 +624,7 @@
                 <th>Points</th>
                 <th>Losses</th>
                 <th>Points %</th>
-                <th>Actions</th>
+                <th>Actions (Admin PIN)</th>
               </tr>
             </thead>
             <tbody id="players-body">
@@ -594,7 +641,7 @@
         </div>
 
         <div class="controls">
-          <button id="reset-all" class="danger">Reset All Points</button>
+          <button id="reset-all" class="danger">Reset All Points (Admin PIN)</button>
         </div>
       </div>
 
@@ -610,19 +657,18 @@
       </div>
     </div>
 
-    <!-- Group Match Section -->
+    <!-- Friends: Request Match Section -->
     <div class="match-section">
       <div class="match-header-line">
         <div>
-          <div class="section-label">Matches</div>
-          <h2>Record Group Match (2 vs 2)</h2>
+          <div class="section-label">Friends – Submit Match</div>
+          <h2>Request Group Match Result (2 vs 2)</h2>
         </div>
-        <span class="tag-pill">Auto-updates all 4 players</span>
+        <span class="tag-pill">Admin will approve and update scores.</span>
       </div>
       <p>
-        Select 2 players per team. Winning team gives
-        <strong>1 point per player</strong> and the other team gets
-        <strong>1 loss per player</strong>. Every match is added to history.
+        Select 2 players per team and choose the winner. This will create a
+        <strong>Pending Match Request</strong>. Admin can later approve it with PIN to update points & history.
       </p>
 
       <form id="match-form">
@@ -670,20 +716,45 @@
             </select>
           </div>
 
-          <button type="submit" class="primary-btn">Save Match</button>
+          <button type="submit" class="primary-btn">Request Match</button>
           <div class="note">
-            You need at least 4 different players to record a group match.
+            You need at least 4 different players to request a group match.
           </div>
         </div>
       </form>
     </div>
 
+    <!-- Pending Requests for Admin -->
+    <div style="margin-top: 24px;">
+      <div class="section-label">Admin – Approvals</div>
+      <h2>
+        Pending Requests
+        <span id="pending-count-badge" class="pending-badge">0 pending</span>
+      </h2>
+      <div class="table-card">
+        <table class="pending-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Type</th>
+              <th>Details</th>
+              <th>Submitted</th>
+              <th>Actions (PIN)</th>
+            </tr>
+          </thead>
+          <tbody id="pending-body">
+            <!-- Pending requests go here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Match History -->
-    <div style="margin-top: 20px;">
+    <div style="margin-top: 24px;">
       <div class="section-label">History</div>
       <h2>Match History</h2>
       <div class="history-header">
-        <span class="muted">Newest match appears at the top.</span>
+        <span class="muted">Only approved matches appear here. Newest at the top.</span>
         <div class="history-actions">
           <label for="history-filter" class="muted">Filter:</label>
           <select id="history-filter">
@@ -691,7 +762,7 @@
             <option value="today">Today</option>
             <option value="week">Last 7 days</option>
           </select>
-          <button id="clear-history" class="danger">Clear History</button>
+          <button id="clear-history" class="danger">Clear History (Admin PIN)</button>
         </div>
       </div>
       <div class="table-card">
@@ -728,10 +799,12 @@
     // LocalStorage keys
     const PLAYERS_KEY = "badminton_group_tracker_players_v2";
     const MATCHES_KEY = "badminton_group_tracker_matches_v1";
+    const PENDING_KEY = "badminton_group_tracker_pending_v1";
 
     // In-memory store
     let players = []; // { id, name, points, losses }
     let matches = []; // { id, time, team1Ids:[], team2Ids:[], winningTeam:1|2 }
+    let pendingRequests = []; // { id, type:'player'|'match', createdAt, payload: {...} }
 
     let selectedPlayerId = null;
     let historyFilter = "all";
@@ -754,6 +827,9 @@
     const historyFilterSelect = document.getElementById("history-filter");
 
     const playerDetailsEl = document.getElementById("player-details");
+
+    const pendingBody = document.getElementById("pending-body");
+    const pendingCountBadge = document.getElementById("pending-count-badge");
 
     const teamSelects = [
       team1Player1Select,
@@ -789,6 +865,19 @@
       }
     }
 
+    function loadPendingFromStorage() {
+      try {
+        const raw = localStorage.getItem(PENDING_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          pendingRequests = parsed;
+        }
+      } catch (e) {
+        console.error("Failed to load pending requests", e);
+      }
+    }
+
     // Save to localStorage
     function savePlayersToStorage() {
       try {
@@ -806,6 +895,14 @@
       }
     }
 
+    function savePendingToStorage() {
+      try {
+        localStorage.setItem(PENDING_KEY, JSON.stringify(pendingRequests));
+      } catch (e) {
+        console.error("Failed to save pending requests", e);
+      }
+    }
+
     // Helper: get player name by id
     function getPlayerNameById(id) {
       const player = players.find((p) => p.id === id);
@@ -814,7 +911,6 @@
 
     // Helper: fill all select dropdowns with current players
     function populatePlayerOptions() {
-      // Find which players are already selected in other selects
       const selectedIds = new Map();
       teamSelects.forEach((s) => {
         if (s.value) {
@@ -825,14 +921,13 @@
       teamSelects.forEach((select) => {
         const currentValue = select.value ? Number(select.value) : null;
 
-        // Collect IDs selected in *other* selects
         const blockedIds = new Set(
           Array.from(selectedIds.entries())
             .filter(([s]) => s !== select)
             .map(([, id]) => id)
         );
 
-        select.innerHTML = ""; // clear
+        select.innerHTML = "";
 
         const placeholder = document.createElement("option");
         placeholder.value = "";
@@ -841,7 +936,7 @@
 
         players.forEach((p) => {
           if (blockedIds.has(p.id) && p.id !== currentValue) {
-            return; // don't show players already chosen elsewhere
+            return;
           }
           const option = document.createElement("option");
           option.value = String(p.id);
@@ -849,7 +944,6 @@
           select.appendChild(option);
         });
 
-        // restore previous value when possible
         if (
           currentValue !== null &&
           Array.from(select.options).some(
@@ -861,25 +955,79 @@
       });
     }
 
-    // Add player
+    // ----- FRIEND REQUESTS -----
+
+    // Request new player (friends)
     playerForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = playerNameInput.value.trim();
       if (!name) return;
 
-      if (!confirmAdmin("add a new player")) return;
-
-      const newPlayer = {
+      const req = {
         id: Date.now(),
-        name,
-        points: 0,
-        losses: 0,
+        type: "player",
+        createdAt: new Date().toISOString(),
+        payload: { name },
       };
-
-      players.push(newPlayer);
+      pendingRequests.unshift(req);
       playerNameInput.value = "";
       renderEverything();
+      alert("Player request submitted. Admin will approve it.");
     });
+
+    // Request match (friends)
+    matchForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      if (players.length < 4) {
+        alert("You need at least 4 players to request a 2 vs 2 match.");
+        return;
+      }
+
+      const t1p1 = team1Player1Select.value;
+      const t1p2 = team1Player2Select.value;
+      const t2p1 = team2Player1Select.value;
+      const t2p2 = team2Player2Select.value;
+      const winningTeam = winningTeamSelect.value;
+
+      if (!t1p1 || !t1p2 || !t2p1 || !t2p2 || !winningTeam) {
+        alert("Please select all 4 players and the winning team.");
+        return;
+      }
+
+      const ids = [t1p1, t1p2, t2p1, t2p2];
+      const uniqueIds = new Set(ids);
+      if (uniqueIds.size !== 4) {
+        alert("Each position must have a different player (no duplicates).");
+        return;
+      }
+
+      const team1Ids = [t1p1, t1p2].map((id) => Number(id));
+      const team2Ids = [t2p1, t2p2].map((id) => Number(id));
+
+      const req = {
+        id: Date.now(),
+        type: "match",
+        createdAt: new Date().toISOString(),
+        payload: {
+          team1Ids,
+          team2Ids,
+          winningTeam: Number(winningTeam),
+        },
+      };
+      pendingRequests.unshift(req);
+
+      team1Player1Select.value = "";
+      team1Player2Select.value = "";
+      team2Player1Select.value = "";
+      team2Player2Select.value = "";
+      winningTeamSelect.value = "";
+
+      renderEverything();
+      alert("Match request submitted. Admin will approve it.");
+    });
+
+    // ----- ADMIN ACTIONS (PIN) -----
 
     // Update points/losses manually from table buttons
     function updatePlayer(id, type) {
@@ -906,6 +1054,91 @@
       }
       renderEverything();
     }
+
+    // Reset all stats
+    resetAllBtn.addEventListener("click", () => {
+      if (!players.length) return;
+      if (!confirmAdmin("reset all players' points and losses")) return;
+
+      players = players.map((p) => ({ ...p, points: 0, losses: 0 }));
+      renderEverything();
+    });
+
+    // Clear match history
+    clearHistoryBtn.addEventListener("click", () => {
+      if (!matches.length) return;
+      if (!confirmAdmin("clear the entire match history")) return;
+
+      matches = [];
+      renderEverything();
+    });
+
+    // Approve / Reject pending requests
+    function approvePendingRequest(id) {
+      const req = pendingRequests.find((r) => r.id === id);
+      if (!req) return;
+
+      if (!confirmAdmin("approve this " + req.type + " request")) return;
+
+      if (req.type === "player") {
+        const name = req.payload.name.trim();
+        if (name) {
+          const newPlayer = {
+            id: Date.now(),
+            name,
+            points: 0,
+            losses: 0,
+          };
+          players.push(newPlayer);
+        }
+      } else if (req.type === "match") {
+        const { team1Ids, team2Ids, winningTeam } = req.payload;
+
+        let winningIds, losingIds;
+        if (winningTeam === 1) {
+          winningIds = team1Ids;
+          losingIds = team2Ids;
+        } else {
+          winningIds = team2Ids;
+          losingIds = team1Ids;
+        }
+
+        players = players.map((p) => {
+          if (winningIds.includes(p.id)) {
+            return { ...p, points: p.points + 1 };
+          }
+          if (losingIds.includes(p.id)) {
+            return { ...p, losses: p.losses + 1 };
+          }
+          return p;
+        });
+
+        const match = {
+          id: Date.now(),
+          time: new Date().toISOString(),
+          team1Ids,
+          team2Ids,
+          winningTeam,
+        };
+        matches.unshift(match);
+      }
+
+      pendingRequests = pendingRequests.filter((r) => r.id !== id);
+      renderEverything();
+    }
+
+    function rejectPendingRequest(id) {
+      const req = pendingRequests.find((r) => r.id === id);
+      if (!req) return;
+
+      const ok = confirm("Reject this " + req.type + " request?");
+      if (!ok) return;
+
+      pendingRequests = pendingRequests.filter((r) => r.id !== id);
+      renderEverything();
+    }
+
+    // ----- STATS & RENDERING -----
 
     // Calculate points percentage
     function getPointsPercentage(player) {
@@ -934,7 +1167,7 @@
       return results;
     }
 
-    // Compute current win streak (consecutive W from newest going back)
+    // Compute current win streak
     function getCurrentWinStreak(playerId) {
       let streak = 0;
       for (const match of matches) {
@@ -956,99 +1189,8 @@
       return streak;
     }
 
-    // Reset all stats
-    resetAllBtn.addEventListener("click", () => {
-      if (!players.length) return;
-      if (!confirmAdmin("reset all players' points and losses")) return;
-
-      players = players.map((p) => ({ ...p, points: 0, losses: 0 }));
-      renderEverything();
-    });
-
-    // Clear match history
-    clearHistoryBtn.addEventListener("click", () => {
-      if (!matches.length) return;
-      if (!confirmAdmin("clear the entire match history")) return;
-
-      matches = [];
-      renderEverything();
-    });
-
-    // Record group match (2 vs 2)
-    matchForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      if (players.length < 4) {
-        alert("You need at least 4 players to record a 2 vs 2 match.");
-        return;
-      }
-
-      const t1p1 = team1Player1Select.value;
-      const t1p2 = team1Player2Select.value;
-      const t2p1 = team2Player1Select.value;
-      const t2p2 = team2Player2Select.value;
-      const winningTeam = winningTeamSelect.value;
-
-      if (!t1p1 || !t1p2 || !t2p1 || !t2p2 || !winningTeam) {
-        alert("Please select all 4 players and the winning team.");
-        return;
-      }
-
-      const ids = [t1p1, t1p2, t2p1, t2p2];
-      const uniqueIds = new Set(ids);
-      if (uniqueIds.size !== 4) {
-        alert("Each position must have a different player (no duplicates).");
-        return;
-      }
-
-      if (!confirmAdmin("save this match and update scores")) return;
-
-      const team1Ids = [t1p1, t1p2].map((id) => Number(id));
-      const team2Ids = [t2p1, t2p2].map((id) => Number(id));
-
-      let winningIds, losingIds;
-      if (winningTeam === "1") {
-        winningIds = team1Ids;
-        losingIds = team2Ids;
-      } else {
-        winningIds = team2Ids;
-        losingIds = team1Ids;
-      }
-
-      // Update players: +1 point for each winner, +1 loss for each loser
-      players = players.map((p) => {
-        if (winningIds.includes(p.id)) {
-          return { ...p, points: p.points + 1 };
-        }
-        if (losingIds.includes(p.id)) {
-          return { ...p, losses: p.losses + 1 };
-        }
-        return p;
-      });
-
-      // Save match into history (newest first)
-      const match = {
-        id: Date.now(),
-        time: new Date().toISOString(),
-        team1Ids,
-        team2Ids,
-        winningTeam: Number(winningTeam),
-      };
-      matches.unshift(match);
-
-      // Reset match selections
-      team1Player1Select.value = "";
-      team1Player2Select.value = "";
-      team2Player1Select.value = "";
-      team2Player2Select.value = "";
-      winningTeamSelect.value = "";
-
-      renderEverything();
-    });
-
     // Render players table
     function renderPlayersTable() {
-      // Sort players by points (desc) then name
       const sorted = [...players].sort((a, b) => {
         if (b.points === a.points) {
           return a.name.localeCompare(b.name);
@@ -1196,6 +1338,64 @@
       });
     }
 
+    // Render pending requests
+    function renderPendingRequests() {
+      pendingBody.innerHTML = "";
+
+      if (!pendingRequests.length) {
+        pendingBody.innerHTML =
+          '<tr><td colspan="5" class="muted">No pending requests.</td></tr>';
+        pendingCountBadge.textContent = "0 pending";
+        return;
+      }
+
+      pendingCountBadge.textContent = pendingRequests.length + " pending";
+
+      pendingRequests.forEach((req, index) => {
+        const tr = document.createElement("tr");
+
+        let typeLabel = "";
+        let details = "";
+
+        if (req.type === "player") {
+          typeLabel = "New Player";
+          details = `Name: <strong>${req.payload.name}</strong>`;
+        } else if (req.type === "match") {
+          typeLabel = "Match Result";
+
+          const t1 = req.payload.team1Ids.map(getPlayerNameById).join(" & ");
+          const t2 = req.payload.team2Ids.map(getPlayerNameById).join(" & ");
+          const winner =
+            req.payload.winningTeam === 1 ? "Team 1" : "Team 2";
+
+          details = `
+            <div>Team 1: <strong>${t1}</strong></div>
+            <div>Team 2: <strong>${t2}</strong></div>
+            <div>Winner: <strong>${winner}</strong></div>
+          `;
+        }
+
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${typeLabel}</td>
+          <td style="text-align:left;font-size:12px;">${details}</td>
+          <td>${formatTime(req.createdAt)}</td>
+          <td class="pending-actions">
+            <button class="approve-btn">Approve</button>
+            <button class="reject-btn">Reject</button>
+          </td>
+        `;
+
+        const approveBtn = tr.querySelector(".approve-btn");
+        const rejectBtn = tr.querySelector(".reject-btn");
+
+        approveBtn.addEventListener("click", () => approvePendingRequest(req.id));
+        rejectBtn.addEventListener("click", () => rejectPendingRequest(req.id));
+
+        pendingBody.appendChild(tr);
+      });
+    }
+
     // Player details panel
     function showPlayerDetails(playerId) {
       selectedPlayerId = playerId;
@@ -1207,7 +1407,6 @@
         return;
       }
 
-      // Matches with this player
       const playerMatches = matches.filter(
         (m) => m.team1Ids.includes(playerId) || m.team2Ids.includes(playerId)
       );
@@ -1293,9 +1492,12 @@
     function renderEverything() {
       renderPlayersTable();
       renderMatchHistory();
+      renderPendingRequests();
       populatePlayerOptions();
+
       savePlayersToStorage();
       saveMatchesToStorage();
+      savePendingToStorage();
 
       if (selectedPlayerId !== null) {
         showPlayerDetails(selectedPlayerId);
@@ -1310,6 +1512,7 @@
     // Initial load
     loadPlayersFromStorage();
     loadMatchesFromStorage();
+    loadPendingFromStorage();
     renderEverything();
   </script>
 </body>
