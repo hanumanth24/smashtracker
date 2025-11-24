@@ -714,6 +714,17 @@
   </div>
 
   <script>
+    // ===== Admin PIN (change this to your own) =====
+    const ADMIN_PIN = "2727";
+
+    function confirmAdmin(actionDescription) {
+      const entered = prompt("Admin approval required to " + actionDescription + ". Enter PIN:");
+      if (entered === null) return false; // cancel
+      if (entered === ADMIN_PIN) return true;
+      alert("Wrong PIN");
+      return false;
+    }
+
     // LocalStorage keys
     const PLAYERS_KEY = "badminton_group_tracker_players_v2";
     const MATCHES_KEY = "badminton_group_tracker_matches_v1";
@@ -856,6 +867,8 @@
       const name = playerNameInput.value.trim();
       if (!name) return;
 
+      if (!confirmAdmin("add a new player")) return;
+
       const newPlayer = {
         id: Date.now(),
         name,
@@ -870,6 +883,8 @@
 
     // Update points/losses manually from table buttons
     function updatePlayer(id, type) {
+      if (!confirmAdmin("update this player's score")) return;
+
       players = players.map((p) => {
         if (p.id === id) {
           if (type === "point") p.points += 1;
@@ -883,6 +898,8 @@
 
     // Remove player
     function removePlayer(id) {
+      if (!confirmAdmin("remove this player")) return;
+
       players = players.filter((p) => p.id !== id);
       if (selectedPlayerId === id) {
         selectedPlayerId = null;
@@ -942,10 +959,7 @@
     // Reset all stats
     resetAllBtn.addEventListener("click", () => {
       if (!players.length) return;
-      const confirmReset = confirm(
-        "Are you sure you want to reset all players' points/losses? Match history will stay."
-      );
-      if (!confirmReset) return;
+      if (!confirmAdmin("reset all players' points and losses")) return;
 
       players = players.map((p) => ({ ...p, points: 0, losses: 0 }));
       renderEverything();
@@ -954,10 +968,8 @@
     // Clear match history
     clearHistoryBtn.addEventListener("click", () => {
       if (!matches.length) return;
-      const confirmClear = confirm(
-        "Are you sure you want to clear all match history?"
-      );
-      if (!confirmClear) return;
+      if (!confirmAdmin("clear the entire match history")) return;
+
       matches = [];
       renderEverything();
     });
@@ -988,6 +1000,8 @@
         alert("Each position must have a different player (no duplicates).");
         return;
       }
+
+      if (!confirmAdmin("save this match and update scores")) return;
 
       const team1Ids = [t1p1, t1p2].map((id) => Number(id));
       const team2Ids = [t2p1, t2p2].map((id) => Number(id));
@@ -1241,7 +1255,6 @@
             ${player.name}
             <span class="badge-small">Profile</span>
           </div>
-          <button class="danger" id="clear-player-selection">Clear</button>
         </div>
         <div class="player-stats-row">
           <div class="stat-pill">Total matches: ${total}</div>
@@ -1274,16 +1287,6 @@
         `
         }
       `;
-
-      const clearBtn = document.getElementById("clear-player-selection");
-      clearBtn.addEventListener("click", () => {
-        selectedPlayerId = null;
-        playerDetailsEl.innerHTML = `
-          <p class="muted">
-            Click any player name in the scoreboard to see their personal stats and match history.
-          </p>
-        `;
-      });
     }
 
     // Render everything + save
