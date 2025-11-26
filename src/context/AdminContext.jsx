@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useRef } from "react";
+import React, { createContext, useContext, useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 const AdminContext = createContext(null);
 const ADMIN_PIN = "2727";
@@ -52,43 +53,52 @@ export function AdminProvider({ children }) {
     }
   };
 
+  useEffect(() => {
+    if (!prompt.open) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [prompt.open]);
+
+  const modal = prompt.open ? (
+    <div className="pin-backdrop">
+      <form className="pin-modal" onSubmit={submitPin}>
+        <div className="pin-modal-title">Admin PIN</div>
+        <div className="pin-modal-sub">
+          Enter PIN to {prompt.actionLabel}.
+        </div>
+        <input
+          className="pin-input"
+          type="password"
+          maxLength={6}
+          autoFocus
+          value={prompt.pin}
+          onChange={(e) =>
+            setPrompt((prev) => ({ ...prev, pin: e.target.value }))
+          }
+        />
+        <div className="pin-modal-actions">
+          <button
+            type="button"
+            className="pin-btn pin-btn-cancel"
+            onClick={closePrompt}
+          >
+            Cancel
+          </button>
+          <button type="submit" className="pin-btn pin-btn-ok">
+            Confirm
+          </button>
+        </div>
+      </form>
+    </div>
+  ) : null;
+
   return (
     <AdminContext.Provider value={{ showNotification, requireAdminPin, notifications }}>
       {children}
-
-      {/* PIN modal */}
-      {prompt.open && (
-        <div className="pin-backdrop">
-          <form className="pin-modal" onSubmit={submitPin}>
-            <div className="pin-modal-title">Admin PIN</div>
-            <div className="pin-modal-sub">
-              Enter PIN to {prompt.actionLabel}.
-            </div>
-            <input
-              className="pin-input"
-              type="password"
-              maxLength={6}
-              autoFocus
-              value={prompt.pin}
-              onChange={(e) =>
-                setPrompt((prev) => ({ ...prev, pin: e.target.value }))
-              }
-            />
-            <div className="pin-modal-actions">
-              <button
-                type="button"
-                className="pin-btn pin-btn-cancel"
-                onClick={closePrompt}
-              >
-                Cancel
-              </button>
-              <button type="submit" className="pin-btn pin-btn-ok">
-                Confirm
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      {typeof document !== "undefined" ? createPortal(modal, document.body) : modal}
 
       {/* Notifications */}
       <div className="notification-root">
