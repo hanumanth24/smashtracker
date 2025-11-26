@@ -60,7 +60,7 @@ export default function LeagueView({
   const [team1, setTeam1] = useState({ p1: "", p2: "" });
   const [team2, setTeam2] = useState({ p1: "", p2: "" });
   const [winnerTeam, setWinnerTeam] = useState("");
-  const [confirmModal, setConfirmModal] = useState({ open: false, action: null });
+  const [confirmModal, setConfirmModal] = useState({ open: false, action: null, playerId: null });
 
   const playerMap = useMemo(() => {
     const m = new Map();
@@ -204,11 +204,7 @@ export default function LeagueView({
   };
 
   const removePlayer = (id) => {
-    requireAdminPin("remove this player", async () => {
-      if (!window.confirm("Remove this player?")) return;
-      await deleteDoc(doc(playersRef, id));
-      showNotification("Player removed.", "success");
-    });
+    setConfirmModal({ open: true, action: "remove-player", playerId: id });
   };
 
   const resetAll = () => {
@@ -460,17 +456,26 @@ export default function LeagueView({
       {renderExtras()}
       <ConfirmModal
         open={confirmModal.open}
-        title={confirmModal.action === "reset" ? "Reset all points & losses?" : "Clear match history?"}
+        title={
+          confirmModal.action === "reset"
+            ? "Reset all points & losses?"
+            : confirmModal.action === "remove-player"
+            ? "Remove this player?"
+            : "Clear match history?"
+        }
         body={
           confirmModal.action === "reset"
             ? "This will set all players to 0 points and 0 losses. Requires admin PIN."
+            : confirmModal.action === "remove-player"
+            ? "This will delete the player from the league. Requires admin PIN."
             : "This will delete all recorded matches. Requires admin PIN."
         }
         confirmLabel="Yes, continue"
-        onCancel={() => setConfirmModal({ open: false, action: null })}
+        onCancel={() => setConfirmModal({ open: false, action: null, playerId: null })}
         onConfirm={async () => {
           const action = confirmModal.action;
-          setConfirmModal({ open: false, action: null });
+          const playerId = confirmModal.playerId;
+          setConfirmModal({ open: false, action: null, playerId: null });
 
           if (action === "reset") {
             requireAdminPin("reset all points & losses", async () => {
@@ -483,6 +488,11 @@ export default function LeagueView({
               });
               await batch.commit();
               showNotification("All points and losses reset.", "info");
+            });
+          } else if (action === "remove-player" && playerId) {
+            requireAdminPin("remove this player", async () => {
+              await deleteDoc(doc(playersRef, playerId));
+              showNotification("Player removed.", "success");
             });
           } else if (action === "history") {
             requireAdminPin("clear ALL match history", async () => {
