@@ -12,7 +12,12 @@ function formatPct(wins = 0, losses = 0) {
   return Math.round((wins / total) * 100);
 }
 
-export default function SnapshotOverview({ mode = "league" }) {
+export default function SnapshotOverview({
+  mode = "league",
+  playersData,
+  matchesData,
+  pendingData,
+}) {
   const hydrated = useHydrated();
 
   const playersRef = useMemo(() => collection(db, "players"), []);
@@ -21,15 +26,15 @@ export default function SnapshotOverview({ mode = "league" }) {
   const tMatchesRef = useMemo(() => collection(db, "tournamentMatches"), []);
   const pendingRef = useMemo(() => collection(db, "pendingRequests"), []);
 
-  const players = useCollection(playersRef, "players");
-  const matches = useCollection(matchesRef, "matches");
+  const players = useCollection(playersRef, "players", { disabled: Boolean(playersData) });
+  const matches = useCollection(matchesRef, "matches", { disabled: Boolean(matchesData) });
   const teams = useCollection(teamsRef, "tournamentTeams");
   const tournamentMatches = useCollection(tMatchesRef, "tournamentMatches");
-  const pending = useCollection(pendingRef, "pendingRequests");
+  const pending = useCollection(pendingRef, "pendingRequests", { disabled: Boolean(pendingData) });
 
   const isTournament = mode === "tournament";
-  const entity = isTournament ? teams : players;
-  const played = isTournament ? tournamentMatches : matches;
+  const entity = isTournament ? teams : playersData || players;
+  const played = isTournament ? tournamentMatches : matchesData || matches;
 
   const todayMatches = useMemo(() => {
     const today = new Date().toDateString();
@@ -80,7 +85,7 @@ export default function SnapshotOverview({ mode = "league" }) {
         <div className="stat-pill">
           <div className="pill-label">Pending</div>
           <div className="pill-value" suppressHydrationWarning>
-            {hydrated ? pending.length : "—"}
+            {hydrated ? (pendingData ? pendingData.length : pending.length) : "—"}
           </div>
           <div className="pill-sub">Awaiting approval</div>
         </div>

@@ -16,8 +16,13 @@ function PageContent() {
   const [tab, setTab] = useState("league");
   const hydrated = useHydrated();
   const { notifications } = useAdmin();
-  const playersAll = useCollection(useMemo(() => collection(db, "players"), []), "players");
-  const pendingRequests = useCollection(useMemo(() => collection(db, "pendingRequests"), []), "pendingRequests");
+  const playersRef = useMemo(() => collection(db, "players"), []);
+  const matchesRef = useMemo(() => collection(db, "matches"), []);
+  const pendingRef = useMemo(() => collection(db, "pendingRequests"), []);
+
+  const playersAll = useCollection(playersRef, "players");
+  const matchesAll = useCollection(matchesRef, "matches");
+  const pendingRequests = useCollection(pendingRef, "pendingRequests");
   const notifCount = useMemo(() => {
     if (pendingRequests.length) return pendingRequests.length;
     return notifications.length;
@@ -34,7 +39,12 @@ function PageContent() {
       />
 
       <div className="app-shell" id="top">
-        <SnapshotOverview mode={tab === "tournament" ? "tournament" : "league"} />
+        <SnapshotOverview
+          mode={tab === "tournament" ? "tournament" : "league"}
+          playersData={playersAll}
+          matchesData={matchesAll}
+          pendingData={pendingRequests}
+        />
 
         <div id="league" className="anchor-spacer" aria-hidden />
         <div id="tournament" className="anchor-spacer" aria-hidden />
@@ -43,7 +53,11 @@ function PageContent() {
         <div className="top-grid">
           <div className="card league-card">
             {tab === "league" ? (
-              <LeagueView pendingRequests={pendingRequests} />
+              <LeagueView
+                pendingRequests={pendingRequests}
+                playersData={playersAll}
+                matchesData={matchesAll}
+              />
             ) : (
               <TournamentFirebaseView />
             )}

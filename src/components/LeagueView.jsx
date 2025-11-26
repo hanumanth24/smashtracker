@@ -47,8 +47,8 @@ export default function LeagueView({
   const matchesRef = useMemo(() => collection(db, "matches"), []);
   const pendingRequestsRef = useMemo(() => collection(db, "pendingRequests"), []);
 
-  const playersHook = useCollection(playersRef, "players");
-  const matchesHook = useCollection(matchesRef, "matches");
+  const playersHook = useCollection(playersRef, "players", { disabled: Boolean(playersData) });
+  const matchesHook = useCollection(matchesRef, "matches", { disabled: Boolean(matchesData) });
   const players = playersData || playersHook;
   const matches = matchesData || matchesHook;
   const { showNotification, requireAdminPin } = useAdmin();

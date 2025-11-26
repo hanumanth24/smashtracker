@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { onSnapshot, query as fsQuery } from "firebase/firestore";
 
 function getCached(key) {
@@ -20,12 +20,14 @@ function setCached(key, value) {
   }
 }
 
-export function useCollection(query, cacheKey) {
+export function useCollection(query, cacheKey, options = {}) {
+  const { disabled = false } = options;
   // Keep SSR/client initial content aligned to avoid hydration mismatches; seed cache after mount.
   const [docs, setDocs] = useState([]);
+  const memoQuery = useMemo(() => (disabled ? null : query), [query, disabled]);
 
   useEffect(() => {
-    if (!query) {
+    if (!memoQuery) {
       setDocs([]);
       return undefined;
     }
@@ -35,7 +37,7 @@ export function useCollection(query, cacheKey) {
       setDocs(cached);
     }
 
-    const q = fsQuery(query);
+    const q = fsQuery(memoQuery);
     const unsub = onSnapshot(
       q,
       (snap) => {
@@ -50,7 +52,7 @@ export function useCollection(query, cacheKey) {
       }
     );
     return () => unsub();
-  }, [query, cacheKey]);
+  }, [memoQuery, cacheKey]);
 
   return docs;
 }
