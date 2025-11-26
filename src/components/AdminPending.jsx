@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   addDoc,
   collection,
@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { useAdmin } from "../context/AdminContext.jsx";
+import ConfirmModal from "./ConfirmModal.jsx";
 
 function formatTime(ts) {
   if (!ts) return "";
@@ -32,6 +33,7 @@ export default function AdminPending({ pendingRequests = [], players = [] }) {
   const matchesRef = useMemo(() => collection(db, "matches"), []);
   const pendingRequestsRef = useMemo(() => collection(db, "pendingRequests"), []);
   const { showNotification, requireAdminPin } = useAdmin();
+  const [rejecting, setRejecting] = useState(null);
 
   const getPlayerName = (id) =>
     players.find((p) => p.id === id)?.name || "Unknown";
@@ -79,10 +81,8 @@ export default function AdminPending({ pendingRequests = [], players = [] }) {
     });
   };
 
-  const rejectRequest = async (req) => {
-    if (!window.confirm("Reject this " + req.type + " request?")) return;
-    await deleteDoc(doc(pendingRequestsRef, req.id));
-    showNotification("Request rejected.", "info");
+  const rejectRequest = (req) => {
+    setRejecting(req);
   };
 
   return (
@@ -138,11 +138,7 @@ export default function AdminPending({ pendingRequests = [], players = [] }) {
                       >
                         Approve
                       </button>
-                      <button
-                        className="btn btn-danger"
-                        style={{ padding: "4px 10px" }}
-                        onClick={() => rejectRequest(req)}
-                      >
+                      <button className="btn btn-danger" style={{ padding: "4px 10px" }} onClick={() => rejectRequest(req)}>
                         Reject
                       </button>
                     </td>
@@ -153,6 +149,23 @@ export default function AdminPending({ pendingRequests = [], players = [] }) {
           </tbody>
         </table>
       </div>
+      <ConfirmModal
+        open={Boolean(rejecting)}
+        title="Reject request?"
+        body={
+          rejecting?.type === "player"
+            ? `Reject new player "${rejecting?.name}"?`
+            : "Reject this match request?"
+        }
+        confirmLabel="Reject"
+        onCancel={() => setRejecting(null)}
+        onConfirm={async () => {
+          if (!rejecting) return;
+          await deleteDoc(doc(pendingRequestsRef, rejecting.id));
+          showNotification("Request rejected.", "info");
+          setRejecting(null);
+        }}
+      />
     </div>
   );
 }

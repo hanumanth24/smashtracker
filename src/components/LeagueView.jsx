@@ -14,6 +14,7 @@ import {
 import { db } from "../firebase.js";
 import { useCollection } from "../hooks/useCollection.js";
 import { useAdmin } from "../context/AdminContext.jsx";
+import ConfirmModal from "./ConfirmModal.jsx";
 
 function getPointsPct(p) {
   const points = p.points || 0;
@@ -59,6 +60,7 @@ export default function LeagueView({
   const [team1, setTeam1] = useState({ p1: "", p2: "" });
   const [team2, setTeam2] = useState({ p1: "", p2: "" });
   const [winnerTeam, setWinnerTeam] = useState("");
+  const [confirmModal, setConfirmModal] = useState({ open: false, action: null });
 
   const playerMap = useMemo(() => {
     const m = new Map();
@@ -211,31 +213,12 @@ export default function LeagueView({
 
   const resetAll = () => {
     if (!players.length) return;
-    requireAdminPin("reset all points & losses", async () => {
-      if (!window.confirm("Reset all points and losses?")) return;
-      const batch = writeBatch(db);
-      players.forEach((p) => {
-        batch.update(doc(playersRef, p.id), {
-          points: increment(-1 * (p.points || 0)),
-          losses: increment(-1 * (p.losses || 0)),
-        });
-      });
-      await batch.commit();
-      showNotification("All points and losses reset.", "info");
-    });
+    setConfirmModal({ open: true, action: "reset" });
   };
 
   const clearHistory = () => {
     if (!matches.length) return;
-    requireAdminPin("clear ALL match history", async () => {
-      if (!window.confirm("Clear ALL match history?")) return;
-      const batch = writeBatch(db);
-      matches.forEach((m) => {
-        batch.delete(doc(matchesRef, m.id));
-      });
-      await batch.commit();
-      showNotification("Match history cleared.", "info");
-    });
+    setConfirmModal({ open: true, action: "history" });
   };
 
   const renderScoreboard = () => (
@@ -475,6 +458,44 @@ export default function LeagueView({
     <>
       {renderScoreboard()}
       {renderExtras()}
+      <ConfirmModal
+        open={confirmModal.open}
+        title={confirmModal.action === "reset" ? "Reset all points & losses?" : "Clear match history?"}
+        body={
+          confirmModal.action === "reset"
+            ? "This will set all players to 0 points and 0 losses. Requires admin PIN."
+            : "This will delete all recorded matches. Requires admin PIN."
+        }
+        confirmLabel="Yes, continue"
+        onCancel={() => setConfirmModal({ open: false, action: null })}
+        onConfirm={async () => {
+          const action = confirmModal.action;
+          setConfirmModal({ open: false, action: null });
+
+          if (action === "reset") {
+            requireAdminPin("reset all points & losses", async () => {
+              const batch = writeBatch(db);
+              players.forEach((p) => {
+                batch.update(doc(playersRef, p.id), {
+                  points: increment(-1 * (p.points || 0)),
+                  losses: increment(-1 * (p.losses || 0)),
+                });
+              });
+              await batch.commit();
+              showNotification("All points and losses reset.", "info");
+            });
+          } else if (action === "history") {
+            requireAdminPin("clear ALL match history", async () => {
+              const batch = writeBatch(db);
+              matches.forEach((m) => {
+                batch.delete(doc(matchesRef, m.id));
+              });
+              await batch.commit();
+              showNotification("Match history cleared.", "info");
+            });
+          }
+        }}
+      />
     </>
   );
 }

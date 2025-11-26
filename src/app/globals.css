@@ -464,7 +464,7 @@ select:focus {
 }
 
 .grow {
-  flex: 1 1 320px;
+  flex: 1 1 50px;
   min-width: min(420px, 100%);
 }
 
