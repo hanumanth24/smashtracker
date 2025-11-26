@@ -240,7 +240,7 @@ export default function LeagueView({
 
   const renderScoreboard = () => (
     <div className="league-shell">
-      <div className="league-header">
+      <div className="section-head">
         <div>
           <div className="section-label">League</div>
           <h2>Scoreboard & Requests</h2>
@@ -248,28 +248,18 @@ export default function LeagueView({
         </div>
       </div>
 
-      <div className="controls-row">
-        <form onSubmit={requestNewPlayer} className="controls-row" style={{ flex: 1 }}>
-          <input
-            type="text"
-            placeholder="Request new player name (e.g. Hanu)"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            style={{
-              flex: 1,
-              padding: "10px 12px",
-              borderRadius: 999,
-              border: "1px solid rgba(148,163,184,0.7)",
-              background: "rgba(15,23,42,0.9)",
-              color: "#e5e7eb",
-              fontSize: 13,
-            }}
-          />
-          <button type="submit" className="btn btn-primary">
-            Request Player
-          </button>
-        </form>
-      </div>
+      <form onSubmit={requestNewPlayer} className="controls-row surface-row">
+        <input
+          type="text"
+          className="pill-input grow"
+          placeholder="Request new player name (e.g. Hanu)"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+        />
+        <button type="submit" className="btn btn-primary">
+          Request Player
+        </button>
+      </form>
 
       <div className="card score-card">
         <div className="table-shell">
@@ -297,27 +287,27 @@ export default function LeagueView({
                     <td>{idx + 1}</td>
                     <td>{p.name}</td>
                     <td>{p.points || 0}</td>
-                    <td>{p.losses || 0}</td>
-                    <td>{getPointsPct(p)}</td>
-                    <td className="actions">
-                      <button className="win" onClick={() => addPoint(p.id)}>
-                        +Point
-                      </button>
-                      <button className="loss" onClick={() => addLoss(p.id)}>
-                        +Loss
-                      </button>
-                      <button className="remove" onClick={() => removePlayer(p.id)}>
-                        ✕
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      <td>{p.losses || 0}</td>
+                      <td>{getPointsPct(p)}</td>
+                      <td className="actions">
+                        <button className="chip-btn chip-win" onClick={() => addPoint(p.id)}>
+                          +Point
+                        </button>
+                        <button className="chip-btn chip-loss" onClick={() => addLoss(p.id)}>
+                          +Loss
+                        </button>
+                        <button className="chip-btn chip-remove" onClick={() => removePlayer(p.id)}>
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>
         </div>
       </div>
-      <div className="controls-row" style={{ justifyContent: "flex-end" }}>
+      <div className="controls-row controls-end">
         <button className="btn btn-danger" onClick={resetAll}>
           Reset All Points (Admin)
         </button>
@@ -334,20 +324,10 @@ export default function LeagueView({
           Pick 2 players per team and select the winner. The request goes to
           pending; admin verifies & applies.
         </p>
-        <form onSubmit={requestMatch}>
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              flexWrap: "wrap",
-              marginTop: 8,
-              marginBottom: 8,
-            }}
-          >
-            <div className="card team-card" style={{ flex: 1, minWidth: 260 }}>
-              <h3 style={{ margin: 0, marginBottom: 6, fontSize: 14, color: "#fbbf24" }}>
-                Team 1
-              </h3>
+        <form onSubmit={requestMatch} className="stack-md">
+          <div className="match-grid">
+            <div className="card team-card">
+              <h3 className="team-title">Team 1</h3>
               <div className="team-row">
                 <label>Player 1</label>
                 <select
@@ -377,10 +357,8 @@ export default function LeagueView({
                 </select>
               </div>
             </div>
-            <div className="card team-card" style={{ flex: 1, minWidth: 260 }}>
-              <h3 style={{ margin: 0, marginBottom: 6, fontSize: 14, color: "#fbbf24" }}>
-                Team 2
-              </h3>
+            <div className="card team-card">
+              <h3 className="team-title">Team 2</h3>
               <div className="team-row">
                 <label>Player 1</label>
                 <select
@@ -411,17 +389,9 @@ export default function LeagueView({
               </div>
             </div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              alignItems: "center",
-              flexWrap: "wrap",
-              marginTop: 4,
-            }}
-          >
-            <div>
-              <label style={{ fontSize: 11, color: "#9ca3af" }}>Winning team</label>
+          <div className="controls-row match-actions">
+            <div className="label-stack">
+              <label className="label-sm">Winning team</label>
               <select value={winnerTeam} onChange={(e) => setWinnerTeam(e.target.value)}>
                 <option value="">Select winner</option>
                 <option value="1">Team 1</option>
@@ -435,20 +405,11 @@ export default function LeagueView({
         </form>
       </div>
 
-      <div style={{ marginTop: 10 }} className="card">
+      <div className="card">
         <div className="section-label">History</div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 8,
-            alignItems: "center",
-            flexWrap: "wrap",
-            marginBottom: 6,
-          }}
-        >
+        <div className="section-head">
           <h2>Match History</h2>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div className="filter-row">
             <span className="muted">Filter:</span>
             <select
               value={historyFilter}

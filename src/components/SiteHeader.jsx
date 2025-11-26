@@ -10,6 +10,7 @@ export default function SiteHeader({
 }) {
   const displayCount = hydrated ? notificationsCount : "—";
   const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
   return (
     <header className="site-header">
       <div className="site-header__inner">
@@ -25,6 +26,8 @@ export default function SiteHeader({
           type="button"
           className={`hamburger ${menuOpen ? "is-open" : ""}`}
           aria-label="Toggle navigation"
+          aria-expanded={menuOpen}
+          aria-controls="primary-nav"
           onClick={() => setMenuOpen((v) => !v)}
         >
           <span />
@@ -32,21 +35,27 @@ export default function SiteHeader({
           <span />
         </button>
 
-        <nav className={`view-toggle ${menuOpen ? "nav-open" : "nav-closed"}`} aria-label="Primary navigation">
+        <nav
+          id="primary-nav"
+          className={`view-toggle ${menuOpen ? "nav-open" : "nav-closed"}`}
+          aria-label="Primary navigation"
+        >
           <Link
             href="/"
+            onClick={closeMenu}
             className={"view-btn " + (activePage === "league" ? "view-active" : "")}
           >
             League View
           </Link>
           <Link
             href="/nrrc"
+            onClick={closeMenu}
             className={"view-btn " + (activePage === "nrrc" ? "view-active" : "")}
           >
             NRRC
           </Link>
           <div className="nav-extra-mobile">
-            <Link className="btn btn-ghost notif-btn nav-btn-full" href="/notifications">
+            <Link className="btn btn-ghost notif-btn nav-btn-full" href="/notifications" onClick={closeMenu}>
               Notifications
               <span
                 className={"notif-count " + (notificationsCount ? "has-count" : "")}
@@ -55,10 +64,7 @@ export default function SiteHeader({
                 {displayCount}
               </span>
             </Link>
-            <a
-              className="btn btn-primary nav-btn-full"
-              href="mailto:team@smashtrack.local?subject=SmashTrack%203D%20Invite"
-            >
+            <a className="btn btn-primary nav-btn-full" href="mailto:team@smashtrack.local?subject=SmashTrack%203D%20Invite">
               Share Link
             </a>
           </div>
