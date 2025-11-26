@@ -18,3 +18,8 @@ Firebase-backed badminton league + tournament tracker with a neon Three.js court
 ## Admin PIN
 
 Admin actions are protected by a PIN modal. Default: `2727`. Change it in `src/context/AdminContext.jsx` before deploying.
+
+## Deployment (Netlify)
+
+- Build command: `npm run build`
+- Publish directory: `out` (generated because `output: "export"` is set in `next.config.js`)
