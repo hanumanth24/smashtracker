@@ -1,5 +1,8 @@
 'use client';
 
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+
 export default function ConfirmModal({
   open,
   title,
@@ -9,8 +12,18 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }) {
+  useEffect(() => {
+    if (!open) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   if (!open) return null;
-  return (
+
+  const modal = (
     <div className="pin-backdrop">
       <div className="pin-modal confirm-modal" role="dialog" aria-modal="true">
         <div className="pin-modal-title">{title}</div>
@@ -26,4 +39,7 @@ export default function ConfirmModal({
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") return modal;
+  return createPortal(modal, document.body);
 }
